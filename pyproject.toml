@@ -1,0 +1,20 @@
+[project]
+name = "phisher-cop"
+version = "0.1.0"
+description = "A simple email phishing detector"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "flask>=3.1.2",
+    "numpy>=2.3.2",
+    "scikit-learn>=1.7.1",
+]
+
+[dependency-groups]
+dev = ["ruff>=0.12.7"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.format]
+line-ending = "lf"

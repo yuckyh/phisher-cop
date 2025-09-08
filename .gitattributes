@@ -1,0 +1,75 @@
+# Auto detect
+# This will handle all files NOT defined below.
+*                 text=auto eol=lf
+
+# Source code
+*.bash            text eol=lf
+*.css             text diff=css
+*.htm             text diff=html
+*.html            text diff=html
+*.js              text
+*.mjs             text
+*.json            text
+*.map             text -diff
+*.py              text
+*.sass            text
+*.scss            text diff=css
+*.sh              text eol=lf
+*.ts              text
+
+# Docker
+Dockerfile        text
+
+# Documentation
+*.markdown        text diff=markdown
+*.md              text diff=markdown
+*.txt             text
+license           text
+LICENSE           text
+readme            text
+*README*          text
+
+# Templates
+*.handlebars      text
+
+# Configs
+*.conf            text
+*.config          text
+.editorconfig     text
+.env              text
+.gitattributes    text
+.gitconfig        text
+.htaccess         text
+*.lock            text -diff
+package.json      text eol=lf
+package-lock.json text eol=lf -diff
+.prettierrc       text
+pyproject.toml    text
+.python-version   text
+*.sample          text
+*.toml            text
+*.yaml            text
+*.yml             text
+tsconfig.json     linguist-language=JSON-with-Comments
+
+# Graphics
+*.gif             binary
+*.ico             binary
+*.jpg             binary
+*.jpeg            binary
+*.pdf             binary
+*.png             binary
+*.svg             text
+*.tif             binary
+*.tiff            binary
+*.wbmp            binary
+*.webp            binary
+
+# Fonts
+*.ttf             binary
+
+# RC files (like .babelrc or .eslintrc)
+*.*rc             text
+
+# Ignore files (like .npmignore or .gitignore)
+*.*ignore         text

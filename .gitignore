@@ -1,0 +1,9 @@
+.venv/
+.ruff_cache/
+__pycache__/
+.ipynb_checkpoints/
+.env
+.env.*
+*.pyc
+*.pyo
+*.pyd
