@@ -49,7 +49,7 @@ When you are done working on your branch, don't forget to make a pull request an
 Create the `requirements.txt` file. This will give pip the packages and versions to install.
 
 ```bash
-uv pip freeze > requirements.txt  # We run this command and send requirements.txt to the professor
+uv pip compile pyproject.toml -o requirements.txt  # We run this command and send requirements.txt to the professor
 ```
 
 2. Create a virtual environment

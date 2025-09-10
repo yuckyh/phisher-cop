@@ -20,7 +20,7 @@ jobs:
 
       - name: Update requirements.txt
         run: |
-          uv pip freeze > requirements.txt
+          uv pip compile pyproject.toml -o requirements.txt
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
