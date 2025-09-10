@@ -40,6 +40,17 @@ However, I highly recommend that you turn on "format on save" in your VS Code se
 
 When you are done working on your branch, don't forget to make a pull request and ping someone for review.
 
+## Training the model
+
+Download [the dataset](https://www.kaggle.com/datasets/beatoa/spamassassin-public-corpus) as a zip and place it in this project's root directory.
+The file should be named `archive.zip`.
+
+Then, just run the training script:
+
+```bash
+uv run src/train.py
+```
+
 ## Running the project without uv (for the professor's sake)
 
 > Recommended python version: 3.12.11
@@ -82,5 +93,6 @@ pip install -r requirements.txt
 ```bash
 python src/cli.py     # Run the CLI
 python src/web.py     # Run the web server
+python src/train.py   # Train the ML model
 python tests/main.py  # Run the tests
 ```
