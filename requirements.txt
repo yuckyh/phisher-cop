@@ -2,10 +2,20 @@
 #    uv pip compile pyproject.toml -o requirements.txt
 blinker==1.9.0
     # via flask
+certifi==2025.8.3
+    # via requests
+charset-normalizer==3.4.3
+    # via requests
 click==8.2.1
     # via flask
+filelock==3.19.1
+    # via tldextract
 flask==3.1.2
     # via phisher-cop (pyproject.toml)
+idna==3.10
+    # via
+    #   requests
+    #   tldextract
 itsdangerous==2.2.0
     # via flask
 jinja2==3.1.6
@@ -22,11 +32,21 @@ numpy==2.3.3
     #   phisher-cop (pyproject.toml)
     #   scikit-learn
     #   scipy
+requests==2.32.5
+    # via
+    #   requests-file
+    #   tldextract
+requests-file==2.1.0
+    # via tldextract
 scikit-learn==1.7.2
     # via phisher-cop (pyproject.toml)
 scipy==1.16.1
     # via scikit-learn
 threadpoolctl==3.6.0
     # via scikit-learn
+tldextract==5.3.0
+    # via phisher-cop (pyproject.toml)
+urllib3==2.5.0
+    # via requests
 werkzeug==3.1.3
     # via flask
