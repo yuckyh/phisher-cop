@@ -11,7 +11,7 @@ You can install uv [here](https://docs.astral.sh/uv/getting-started/installation
 To run a script within the uv environment, use:
 
 ```bash
-uv run <script-name>.py  # 'src/cli.py', 'src/web.py' or 'tests/main.py'
+uv run -s <script-name>.py  # 'src/cli.py', 'src/web.py' or 'src/train.py'
 ```
 
 To add a project dependency, run:
@@ -26,6 +26,18 @@ To remove a project dependency, run:
 uv remove <package-name>
 ```
 
+To run all tests and generate a coverage report, run:
+
+- On Linux or MacOS
+```bash
+./test.sh
+```
+
+- On Windows
+```powershell
+sh .\test.sh  # If you already have git installed, this will execute the script with Git Bash
+```
+
 ### Linting and formatting
 
 If you're on VS Code, install the [Ruff extension](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff).
@@ -38,7 +50,7 @@ However, I highly recommend that you turn on "format on save" in your VS Code se
 
 ### GitHub
 
-When you are done working on your branch, don't forget to make a pull request and ping someone for review.
+Make a separate branch for each feature or bugfix you work on. When you are done working on your branch, don't forget to make a pull request and ping someone for review.
 
 ## Training the model
 
@@ -48,7 +60,7 @@ The file should be named `archive.zip`.
 Then, just run the training script:
 
 ```bash
-uv run src/train.py
+uv run -s src/train.py
 ```
 
 ## Running the project without uv (for the professor's sake)
@@ -91,8 +103,8 @@ pip install -r requirements.txt
 5. Run the scripts
 
 ```bash
-python src/cli.py     # Run the CLI
-python src/web.py     # Run the web server
-python src/train.py   # Train the ML model
-python tests/main.py  # Run the tests
+python3 src/cli.py                 # Run the CLI
+python3 src/web.py                 # Run the web server
+python3 src/train.py               # Train the ML model
+python3 -m unittest tests/main.py  # Run the tests
 ```
