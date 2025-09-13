@@ -12,13 +12,17 @@ HAM = 0
 SPAM = 1
 DataSplit: TypeAlias = tuple[list[str], list[int]]
 
+def update_hash(hash_func, file_path: str):
+    """Update the given hash function with the contents of a file."""
+    with open(file_path, "rb") as f:
+        while chunk := f.read(8192):
+            hash_func.update(chunk)
+
 
 def hash_file(file_path: str) -> str:
     """Compute the SHA-256 hash of a file."""
     hash_func = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        while chunk := f.read(8192):
-            hash_func.update(chunk)
+    update_hash(hash_func, file_path)
     return hash_func.hexdigest()
 
 
@@ -30,9 +34,7 @@ def hash_dir(dir_path: str) -> str:
             file_path = os.path.join(root, file)
             relative_path = os.path.relpath(file_path, dir_path)
             hash_func.update(relative_path.encode())
-            with open(file_path, "rb") as f:
-                while chunk := f.read(8192):
-                    hash_func.update(chunk)
+            update_hash(hash_func, file_path)
     return hash_func.hexdigest()
 
 
