@@ -8,6 +8,8 @@ charset-normalizer==3.4.3
     # via requests
 click==8.2.1
     # via flask
+coverage==7.10.6
+    # via phisher-cop (pyproject.toml)
 filelock==3.19.1
     # via tldextract
 flask==3.1.2
