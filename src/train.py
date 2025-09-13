@@ -146,7 +146,11 @@ def load_data() -> tuple[DataSplit, DataSplit, DataSplit]:
     if not os.path.exists(DATA_DIR) or hash_dir(DATA_DIR) != DATA_HASH_EXPECTED:
         unzip_and_prepare_data(ZIP_PATH, ZIP_HASH_EXPECTED, DATA_DIR)
 
-    return *(os.path.join(DATA_DIR, split) for split in ("train", "val", "test")),
+    return (
+        load_split(os.path.join(DATA_DIR, "train")),
+        load_split(os.path.join(DATA_DIR, "val")),
+        load_split(os.path.join(DATA_DIR, "test")),
+    )
 
 
 if __name__ == "__main__":
