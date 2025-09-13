@@ -89,43 +89,33 @@ def unzip_and_prepare_data(zip_path: str, zip_hash_expected: str, out_dir: str):
     os.remove(os.path.join(out_dir, "spam_2", "spam_2", "cmds"))
 
     seed(9912629)  # Fixed seed needed for directory hash to work
-    easy_ham_train, easy_ham_val, easy_ham_test = split_dir(
-        os.path.join(out_dir, "easy_ham", "easy_ham"), SPLITS
-    )
-    hard_ham_train, hard_ham_val, hard_ham_test = split_dir(
-        os.path.join(out_dir, "hard_ham", "hard_ham"), SPLITS
-    )
-    spam_train, spam_val, spam_test = split_dir(
-        os.path.join(out_dir, "spam_2", "spam_2"), SPLITS
-    )
-    ham_train = easy_ham_train + hard_ham_train
-    ham_val = easy_ham_val + hard_ham_val
-    ham_test = easy_ham_test + hard_ham_test
+
+    dirs = ("easy_ham", "hard_ham", "spam_2")
+    easy_ham, hard_ham, spam = *(split_dir(os.path.join(out_dir, dir, dir), SPLITS) for dir in dirs),
+
+    ham_train, ham_val, ham_test = *(easy + hard for easy, hard in zip(easy_ham, hard_ham)),
+    spam_train, spam_val, spam_test = spam
+
+    out_partitions = ((ham_train, "train", "ham"), (spam_train, "train", "spam"), (ham_val, "val", "ham"), (spam_val, "val", "spam"), (ham_test, "test", "ham"), (spam_test, "test", "spam"))
 
     for files, dir in [
-        (ham_train, os.path.join(out_dir, "train", "ham")),
-        (spam_train, os.path.join(out_dir, "train", "spam")),
-        (ham_val, os.path.join(out_dir, "val", "ham")),
-        (spam_val, os.path.join(out_dir, "val", "spam")),
-        (ham_test, os.path.join(out_dir, "test", "ham")),
-        (spam_test, os.path.join(out_dir, "test", "spam")),
+        (var, os.path.join(out_dir, name, label)) for var, name, label in out_partitions
     ]:
         os.makedirs(dir)
         for i, file_path in enumerate(files):
             shutil.move(file_path, os.path.join(dir, f"{i:04d}.txt"))
 
-    shutil.rmtree(os.path.join(out_dir, "easy_ham"))
-    shutil.rmtree(os.path.join(out_dir, "hard_ham"))
-    shutil.rmtree(os.path.join(out_dir, "spam_2"))
+    for dir in dirs:
+        shutil.rmtree(os.path.join(out_dir, dir))
 
 
 def load_split(split_dir: str) -> DataSplit:
     """Load a dataset split from disk."""
     texts = []
     labels = []
+    dir_labels = (("ham", HAM), ("spam", SPAM))
     for dir, label in [
-        (os.path.join(split_dir, "ham"), HAM),
-        (os.path.join(split_dir, "spam"), SPAM),
+        (os.path.join(split_dir, dir), label) for dir, label in dir_labels
     ]:
         for filename in os.listdir(dir):
             file_path = os.path.join(dir, filename)
@@ -154,19 +144,14 @@ def load_data() -> tuple[DataSplit, DataSplit, DataSplit]:
     if not os.path.exists(DATA_DIR) or hash_dir(DATA_DIR) != DATA_HASH_EXPECTED:
         unzip_and_prepare_data(ZIP_PATH, ZIP_HASH_EXPECTED, DATA_DIR)
 
-    return (
-        load_split(os.path.join(DATA_DIR, "train")),
-        load_split(os.path.join(DATA_DIR, "val")),
-        load_split(os.path.join(DATA_DIR, "test")),
-    )
+    return *(os.path.join(DATA_DIR, split) for split in ("train", "val", "test")),
 
 
 if __name__ == "__main__":
     project_root = Path(os.path.realpath(__file__)).parent.parent
     os.chdir(project_root)
     train, val, test = load_data()
-    print(f"Train set: {len(train[0])} samples")
-    print(f"Validation set: {len(val[0])} samples")
-    print(f"Test set: {len(test[0])} samples")
+    for split, name in zip((train, val, test), ("Train", "Validation", "Test")):
+        print(f"{name} set : {len(split[0])} samples")
 
     raise Exception("TODO: Not implemented")
