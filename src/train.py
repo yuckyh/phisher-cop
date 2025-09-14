@@ -12,6 +12,7 @@ HAM = 0
 SPAM = 1
 DataSplit: TypeAlias = tuple[list[str], list[int]]
 
+
 def update_hash(hash_func, file_path: str):
     """Update the given hash function with the contents of a file."""
     with open(file_path, "rb") as f:
@@ -93,16 +94,24 @@ def unzip_and_prepare_data(zip_path: str, zip_hash_expected: str, out_dir: str):
     seed(9912629)  # Fixed seed needed for directory hash to work
 
     dirs = ("easy_ham", "hard_ham", "spam_2")
-    easy_ham, hard_ham, spam = *(split_dir(os.path.join(out_dir, dir, dir), SPLITS) for dir in dirs),
+    easy_ham, hard_ham, spam = (
+        *(split_dir(os.path.join(out_dir, dir, dir), SPLITS) for dir in dirs),
+    )
 
-    ham_train, ham_val, ham_test = *(easy + hard for easy, hard in zip(easy_ham, hard_ham)),
+    ham_train, ham_val, ham_test = (
+        *(easy + hard for easy, hard in zip(easy_ham, hard_ham)),
+    )
     spam_train, spam_val, spam_test = spam
 
-    out_partitions = ((ham_train, "train", "ham"), (spam_train, "train", "spam"), (ham_val, "val", "ham"), (spam_val, "val", "spam"), (ham_test, "test", "ham"), (spam_test, "test", "spam"))
-
-    for files, dir in [
-        (var, os.path.join(out_dir, name, label)) for var, name, label in out_partitions
-    ]:
+    for files, split, label in (
+        (ham_train, "train", "ham"),
+        (spam_train, "train", "spam"),
+        (ham_val, "val", "ham"),
+        (spam_val, "val", "spam"),
+        (ham_test, "test", "ham"),
+        (spam_test, "test", "spam"),
+    ):
+        dir = os.path.join(out_dir, split, label)
         os.makedirs(dir)
         for i, file_path in enumerate(files):
             shutil.move(file_path, os.path.join(dir, f"{i:04d}.txt"))
