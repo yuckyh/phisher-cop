@@ -72,7 +72,7 @@ uv run -s src/train.py
 Create the `requirements.txt` file. This will give pip the packages and versions to install.
 
 ```bash
-uv pip compile pyproject.toml -o requirements.txt  # We run this command and send requirements.txt to the professor
+uv export --format requirements.txt --locked --no-dev --no-emit-workspace -o requirements.txt  # We run this command and send requirements.txt to the professor
 ```
 
 2. Create a virtual environment

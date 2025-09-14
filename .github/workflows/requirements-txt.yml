@@ -1,8 +1,12 @@
 name: Update requirements.txt
 on:
+  workflow_dispatch:
   push:
     branches: ["main"]
-  workflow_dispatch:
+    paths: ["uv.lock"]
+  pull_request:
+    branches: ["main"]
+    paths: ["uv.lock"]
 jobs:
   requirements-txt:
     permissions:
@@ -20,7 +24,7 @@ jobs:
 
       - name: Update requirements.txt
         run: |
-          uv pip compile pyproject.toml -o requirements.txt
+          uv export --format requirements.txt --locked --no-dev --no-emit-workspace -o requirements.txt
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
