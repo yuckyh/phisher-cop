@@ -1,3 +1,5 @@
+"""Functions to sanitize and extract useful information from text documents."""
+
 from domain import Domain
 
 
