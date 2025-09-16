@@ -1,4 +1,2 @@
-class Model:
-    """Convenience wrapper for model loading, training and inference."""
-
-    raise Exception("TODO: Not implemented")
+Model = ()  # TODO: Define `Model` as a sklearn model.
+raise Exception("TODO: Not implemented")
