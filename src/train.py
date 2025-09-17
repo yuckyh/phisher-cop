@@ -1,15 +1,32 @@
 """Entry point for the model training script."""
 
-import os
-from pathlib import Path
+import numpy as np
+from numpy.typing import NDArray
 
-from dataset import load_data
+from model import Model
+
+
+def dummy_data(
+    rng: np.random.Generator, rows: int
+) -> tuple[NDArray[np.float64], NDArray[np.int64]]:
+    features = rng.standard_normal((rows, 10))
+    labels = features.sum(axis=1) > 0
+    labels = labels.astype(np.int64)
+    return features, labels
+
 
 if __name__ == "__main__":
-    project_root = Path(os.path.realpath(__file__)).parent.parent
-    os.chdir(project_root)
-    train, val, test = load_data()
-    for split, name in zip((train, val, test), ("Train", "Validation", "Test")):
-        print(f"{name} set : {len(split[0])} samples")
+    # TODO: use real data instead of dummy data
+    # project_root = Path(os.path.realpath(__file__)).parent.parent
+    # os.chdir(project_root)
+    # train, val, test = load_data()
+    # for split, name in zip((train, val, test), ("Train", "Validation", "Test")):
+    #     print(f"{name} set : {len(split[0])} samples")
 
-    raise Exception("TODO: Not implemented")
+    rng = np.random.default_rng(1974827191289312837)
+    train, val, test = dummy_data(rng, 1000), dummy_data(rng, 200), dummy_data(rng, 200)
+    ml = Model()
+    ml.fit(*train)
+    print(f"Train accuracy: {ml.score(*train):.3f}")
+    print(f"Validation accuracy: {ml.score(*val):.3f}")
+    print(f"Test accuracy: {ml.score(*test):.3f}")
