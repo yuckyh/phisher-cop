@@ -135,7 +135,7 @@ def load_split(split_dir: str) -> DataSplit:
 
 def load_data() -> tuple[DataSplit, DataSplit, DataSplit]:
     """
-    Load the dataset from the disk, unziping and preparing it if necessary.
+    Load the dataset from the disk, unzipping and preparing it if necessary.
     Before running, download the dataset and place it in this project's root directory as `archive.zip`:
     https://www.kaggle.com/datasets/beatoa/spamassassin-public-corpus
     """
