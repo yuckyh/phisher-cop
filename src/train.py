@@ -3,7 +3,9 @@
 import numpy as np
 from numpy.typing import NDArray
 
-from model import Model
+from model import Model, save_model
+
+MODEL_PATH = "model.joblib"
 
 
 def dummy_data(
@@ -27,6 +29,7 @@ if __name__ == "__main__":
     train, val, test = dummy_data(rng, 1000), dummy_data(rng, 200), dummy_data(rng, 200)
     ml = Model()
     ml.fit(*train)
+    save_model(ml, MODEL_PATH)
     print(f"Train accuracy: {ml.score(*train):.3f}")
     print(f"Validation accuracy: {ml.score(*val):.3f}")
     print(f"Test accuracy: {ml.score(*test):.3f}")
