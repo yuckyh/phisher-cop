@@ -15,7 +15,7 @@ class Domain:
     tld: str
 
 
-def parse(url: str) -> Domain:
+def parse_domain(url: str) -> Domain:
     """Parse a URL string and return only the domain."""
     url_parts = urlparse(url)
     domain_parts = extract(url_parts.netloc)
