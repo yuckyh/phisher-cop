@@ -157,7 +157,7 @@ def load_data(data_dir: str, expected_data_hash: str, zip_path: str, expected_zi
     # Data is missing or corrupted, we need to unzip and prepare it first
     if not os.path.exists(data_dir) or hash_dir(data_dir) != expected_data_hash:
         out_dir = unzip(zip_path, expected_zip_hash)
-        prepare_splits(out_dir, splits)
+        restructure_splits(out_dir, splits, SEED)
         os.rename(out_dir, data_dir)
         assert hash_dir(data_dir) == expected_data_hash, "Data hash mismatch after unzipping"
 
