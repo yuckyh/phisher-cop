@@ -26,6 +26,12 @@ To remove a project dependency, run:
 uv remove <package-name>
 ```
 
+To run a single test file, run:
+
+```bash
+uv run python -m unittest tests/<file-name>.py
+```
+
 To run all tests and generate a coverage report, run:
 
 - On Linux or MacOS

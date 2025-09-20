@@ -1,7 +1,7 @@
 import unittest
 
 
-class TestFeatureExtract(unittest.TestCase):
+class TestDocument(unittest.TestCase):
     pass
 
 
