@@ -1,0 +1,32 @@
+name: Format code
+on:
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+jobs:
+  format:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.16"
+          enable-cache: true
+
+      - name: Format Code
+        run: |
+          uv sync --only-dev --frozen
+          # Put cache folder in .venv so that the uv action will cache it
+          uv run ruff check --fix-only --cache-dir .venv/ruff_cache
+          uv run ruff format --cache-dir .venv/ruff_cache
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Format code
+          branch: ${{ github.head_ref }}
