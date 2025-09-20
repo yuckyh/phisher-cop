@@ -48,7 +48,3 @@ class TestDataset(unittest.TestCase):
             for split in splits:
                 all_files.update(split)
             self.assertEqual(len(all_files), 10)
-
-
-if __name__ == "__main__":
-    unittest.main()
