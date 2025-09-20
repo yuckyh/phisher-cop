@@ -4,8 +4,7 @@ import numpy as np
 from numpy.typing import NDArray
 
 from model import Model, save_model
-
-MODEL_PATH = "model.joblib"
+from phisher_cop import MODEL_PATH
 
 
 def dummy_data(
@@ -19,11 +18,10 @@ def dummy_data(
 
 if __name__ == "__main__":
     # TODO: use real data instead of dummy data
-    # project_root = Path(os.path.realpath(__file__)).parent.parent
     # os.chdir(project_root)
-    # train, val, test = load_data()
+    # train, val, test = load_data(0.8, 0.1, 0.1)
     # for split, name in zip((train, val, test), ("Train", "Validation", "Test")):
-    #     print(f"{name} set : {len(split[0])} samples")
+    #     print(f"{name} set: {len(split[0])} samples")
 
     rng = np.random.default_rng(1974827191289312837)
     train, val, test = dummy_data(rng, 1000), dummy_data(rng, 200), dummy_data(rng, 200)
