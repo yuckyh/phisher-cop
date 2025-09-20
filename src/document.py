@@ -1,5 +1,6 @@
 """Functions to sanitize and extract useful information from text documents."""
 
+import urllib.parse
 from email import message, message_from_file
 from email.utils import parseaddr
 
@@ -52,12 +53,24 @@ def sanitize_payload(email: message.Message) -> str:
     return sanitize_html(payload_from_email(email))
 
 
-def urls_from_payload(payload: str) -> set[str]:
+def urls_from_words(words: list[str]) -> set[urllib.parse.ParseResult]:
+    parsed_urls = {urllib.parse.urlparse(word) for word in words}
+    return {url for url in parsed_urls if url.netloc}
+
+
+def anchor_urls_from_payload(payload: str) -> set[urllib.parse.ParseResult]:
     soup = BeautifulSoup(payload, "html.parser")
-    urls = {
-        str(a.get("href")) for a in soup.find_all("a", href=True) if isinstance(a, Tag)
+    return {
+        urllib.parse.urlparse(str(a.get("href")))
+        for a in soup.find_all("a", href=True)
+        if isinstance(a, Tag)
     }
-    return urls
+
+
+def urls_from_payload(payload: str) -> set[urllib.parse.ParseResult]:
+    return urls_from_words(
+        get_words(document_from_payload(payload))
+    ) | anchor_urls_from_payload(payload)
 
 
 def document_from_payload(payload: str) -> str:
