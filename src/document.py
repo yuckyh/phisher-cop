@@ -35,10 +35,11 @@ def payload_from_email(email: mailbox.mboxMessage) -> str:
     if not email.is_multipart():
         return str(email.get_payload())
 
-    parts = []
-    for part in email.walk():
-        if part.get_content_type() == "text/plain":
-            parts.append(part.get_payload())
+    parts = [
+        str(part.get_payload())
+        for part in email.walk()
+        if part.get_content_type() == "text/plain"
+    ]
     return "\n".join(parts)
 
 
