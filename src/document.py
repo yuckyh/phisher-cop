@@ -27,14 +27,15 @@ def email_from_input(sender: str, recipient: str, cc: list[str], subject: str, p
 
 
 def payload_from_email(email: mailbox.mboxMessage) -> str:
-    if email.is_multipart():
-        parts = []
-        for part in email.walk():
-            if part.get_content_type() == "text/plain":
-                parts.append(part.get_payload())
-        return "\n".join(parts)
+    if not email.is_multipart():
+        return str(email.get_payload())
+    
+    parts = []
+    for part in email.walk():
+        if part.get_content_type() == "text/plain":
+            parts.append(part.get_payload())
+    return "\n".join(parts)
 
-    return str(email.get_payload())
 
 
 def sanitize_html(html: str) -> str:
@@ -68,23 +69,3 @@ def get_email_addresses(email: mailbox.mboxMessage) -> list[EmailAddress]:
 
 def get_words(document: str) -> list[str]:
     return [word for word in document.split(' ') if word]
-
-
-def get_urls(words: list[str]) -> list[Domain]:
-    raise NotImplementedError
-
-
-if __name__ == "__main__":
-    emails = email_from_file("data/train/spam/0029.txt")
-    email = emails[0]
-    print(len(emails))
-    print(email['Subject'])
-    print(get_email_addresses(email))
-
-    sanitized_payload = sanitize_payload(email)
-    document = document_from_payload(sanitized_payload)
-
-    print(urls_from_payload(sanitized_payload))
-
-    words = get_words(document)
-    print(words)
