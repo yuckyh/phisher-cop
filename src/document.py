@@ -93,4 +93,6 @@ def get_email_addresses(email: message.Message) -> list[EmailAddress]:
 
 
 def get_words(document: str) -> list[str]:
-    return [word for word in document.split(" ") if word]
+    return [
+        word.replace("\n", "") for word in document.split(" ") if word and word != "\n"
+    ]
