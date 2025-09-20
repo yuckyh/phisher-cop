@@ -11,6 +11,7 @@ class EmailAddress:
     alias: str
     domain: Domain
 
+
 def parse_email_address(address: str) -> EmailAddress:
     """Parse an email address into its components."""
     if "@" not in address:
