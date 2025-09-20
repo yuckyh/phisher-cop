@@ -10,6 +10,12 @@ DATA_HASH_EXPECTED = "4840f3937d6f6f3fc83bb6c7b1f5ec509ec71124eb6435641396987e96
 ZIP_PATH = "archive.zip"
 ZIP_HASH_EXPECTED = "bfac1859ea48dd2105a6c351e2cf3b3c0c0995c0f9e55b996df6a740b5803a8a"
 
+SPLITS = [
+    0.8,  # Train
+    0.1,  # Validation
+    0.1,  # Test
+]
+
 HAM = 0
 SPAM = 1
 DataSplit: TypeAlias = tuple[list[str], list[int]]
@@ -74,7 +80,7 @@ def unzip(zip_path: str, zip_hash_expected: str, out_dir: str):
     if hash_file(zip_path) != zip_hash_expected:
         raise Exception(f"Corrupted {zip_path}, please re-download it")
 
-    # Remove existing directory before unzipping, to make the following logic simpler
+    # Remove existing directory before unzipping, to make sure `out_dir` always has the same files
     shutil.rmtree(out_dir, ignore_errors=True)
     with zipfile.ZipFile(zip_path, "r") as zip_ref:
         zip_ref.extractall(out_dir)
@@ -130,11 +136,7 @@ def load_split(split_dir: str) -> DataSplit:
     return texts, labels
 
 
-def load_data(
-    train_split: float,
-    val_split: float,
-    test_split: float,
-) -> tuple[DataSplit, DataSplit, DataSplit]:
+def load_data() -> tuple[DataSplit, DataSplit, DataSplit]:
     """
     Load the dataset from the disk, unzipping and preparing it if necessary.
     Before running, download the dataset and place it in this project's root directory as `archive.zip`:
@@ -145,8 +147,7 @@ def load_data(
     if not os.path.exists(DATA_DIR) or hash_dir(DATA_DIR) != DATA_HASH_EXPECTED:
         random.seed(9912629)  # Fixed seed needed for directory hash to work
         unzip(ZIP_PATH, ZIP_HASH_EXPECTED, DATA_DIR)
-        splits = [train_split, val_split, test_split]
-        restructure_splits(DATA_DIR, splits)
+        restructure_splits(DATA_DIR, SPLITS)
         assert hash_dir(DATA_DIR) == DATA_HASH_EXPECTED, (
             "Data hash mismatch after unzipping"
         )

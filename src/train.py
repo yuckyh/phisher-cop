@@ -19,7 +19,7 @@ def dummy_data(
 if __name__ == "__main__":
     # TODO: use real data instead of dummy data
     # os.chdir(project_root)
-    # train, val, test = load_data(0.8, 0.1, 0.1)
+    # train, val, test = load_data()
     # for split, name in zip((train, val, test), ("Train", "Validation", "Test")):
     #     print(f"{name} set: {len(split[0])} samples")
 
