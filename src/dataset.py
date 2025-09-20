@@ -1,27 +1,14 @@
 import hashlib
 import os
+import random
 import shutil
 import zipfile
-from random import seed, shuffle
 from typing import TypeAlias
 
-
 DATA_DIR = "data"
-DATA_HASH_EXPECTED = (
-    "4840f3937d6f6f3fc83bb6c7b1f5ec509ec71124eb6435641396987e9677d317"
-)
+DATA_HASH_EXPECTED = "4840f3937d6f6f3fc83bb6c7b1f5ec509ec71124eb6435641396987e9677d317"
 ZIP_PATH = "archive.zip"
-ZIP_HASH_EXPECTED = (
-    "bfac1859ea48dd2105a6c351e2cf3b3c0c0995c0f9e55b996df6a740b5803a8a"
-)
-
-SEED = 9912629  # Fixed seed needed for directory hash to work
-
-SPLITS = [
-    0.8,  # train
-    0.1,  # validation
-    0.1,  # test
-]
+ZIP_HASH_EXPECTED = "bfac1859ea48dd2105a6c351e2cf3b3c0c0995c0f9e55b996df6a740b5803a8a"
 
 HAM = 0
 SPAM = 1
@@ -57,7 +44,7 @@ def hash_dir(dir_path: str) -> str:
 def split_dir(dir_path: str, splits: list[float]) -> list[list[str]]:
     """Split the files in a directory into multiple parts according to the given ratios."""
     file_paths = [os.path.join(dir_path, filename) for filename in os.listdir(dir_path)]
-    shuffle(file_paths)
+    random.shuffle(file_paths)
 
     # Normalize splits to sum to 1
     total = sum(splits)
@@ -78,8 +65,8 @@ def split_dir(dir_path: str, splits: list[float]) -> list[list[str]]:
     return parts
 
 
-def unzip(zip_path: str, zip_hash_expected: str) -> str:
-    """Unzip the dataset and return the output directory."""
+def unzip(zip_path: str, zip_hash_expected: str, out_dir: str):
+    """Unzip the dataset to `out_dir`."""
     if not os.path.exists(zip_path):
         raise Exception(
             f"Missing {zip_path}, please download it from Kaggle:\n  https://www.kaggle.com/datasets/beatoa/spamassassin-public-corpus"
@@ -87,30 +74,26 @@ def unzip(zip_path: str, zip_hash_expected: str) -> str:
     if hash_file(zip_path) != zip_hash_expected:
         raise Exception(f"Corrupted {zip_path}, please re-download it")
 
-    out_dir = os.path.splitext(zip_path)[0]
     # Remove existing directory before unzipping, to make the following logic simpler
     shutil.rmtree(out_dir, ignore_errors=True)
     with zipfile.ZipFile(zip_path, "r") as zip_ref:
         zip_ref.extractall(out_dir)
-    return out_dir
 
 
-def restructure_splits(out_dir: str, splits: list[float], seed: int):
+def restructure_splits(out_dir: str, splits: list[float]):
     """Restructure the unzipped data into train/val/test splits."""
+    assert len(splits) == 3
 
     # This file is not an email
     os.remove(os.path.join(out_dir, "spam_2", "spam_2", "cmds"))
 
-
-    seed(seed)  # Fixed seed needed for directory hash to work
-
     dirs = ("easy_ham", "hard_ham", "spam_2")
     easy_ham, hard_ham, spam = (
-        *(split_dir(os.path.join(out_dir, dir, dir), splits) for dir in dirs),
+        split_dir(os.path.join(out_dir, dir, dir), splits) for dir in dirs
     )
 
     ham_train, ham_val, ham_test = (
-        *(easy + hard for easy, hard in zip(easy_ham, hard_ham)),
+        easy + hard for easy, hard in zip(easy_ham, hard_ham)
     )
     spam_train, spam_val, spam_test = spam
 
@@ -147,7 +130,11 @@ def load_split(split_dir: str) -> DataSplit:
     return texts, labels
 
 
-def load_data(data_dir: str, expected_data_hash: str, zip_path: str, expected_zip_hash: str, splits: list[float]) -> tuple[DataSplit, DataSplit, DataSplit]:
+def load_data(
+    train_split: float,
+    val_split: float,
+    test_split: float,
+) -> tuple[DataSplit, DataSplit, DataSplit]:
     """
     Load the dataset from the disk, unzipping and preparing it if necessary.
     Before running, download the dataset and place it in this project's root directory as `archive.zip`:
@@ -155,18 +142,17 @@ def load_data(data_dir: str, expected_data_hash: str, zip_path: str, expected_zi
     """
 
     # Data is missing or corrupted, we need to unzip and prepare it first
-    if not os.path.exists(data_dir) or hash_dir(data_dir) != expected_data_hash:
-        out_dir = unzip(zip_path, expected_zip_hash)
-        restructure_splits(out_dir, splits, SEED)
-        os.rename(out_dir, data_dir)
-        assert hash_dir(data_dir) == expected_data_hash, "Data hash mismatch after unzipping"
+    if not os.path.exists(DATA_DIR) or hash_dir(DATA_DIR) != DATA_HASH_EXPECTED:
+        random.seed(9912629)  # Fixed seed needed for directory hash to work
+        unzip(ZIP_PATH, ZIP_HASH_EXPECTED, DATA_DIR)
+        splits = [train_split, val_split, test_split]
+        restructure_splits(DATA_DIR, splits)
+        assert hash_dir(DATA_DIR) == DATA_HASH_EXPECTED, (
+            "Data hash mismatch after unzipping"
+        )
 
     return (
-        load_split(os.path.join(data_dir, "train")),
-        load_split(os.path.join(data_dir, "val")),
-        load_split(os.path.join(data_dir, "test")),
+        load_split(os.path.join(DATA_DIR, "train")),
+        load_split(os.path.join(DATA_DIR, "val")),
+        load_split(os.path.join(DATA_DIR, "test")),
     )
-
-
-if __name__ == "__main__":
-    load_data(DATA_DIR, DATA_HASH_EXPECTED, ZIP_PATH, ZIP_HASH_EXPECTED, SPLITS)
