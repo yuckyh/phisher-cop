@@ -3,7 +3,7 @@
 import re
 import urllib.parse
 from email import message, message_from_file
-from email.utils import parseaddr
+from email.utils import getaddresses
 
 from bs4 import BeautifulSoup, Tag
 
@@ -74,16 +74,17 @@ def payload_dom(email: Email) -> BeautifulSoup:
 
 def email_addresses(email: Email) -> list[EmailAddress]:
     addresses = []
-    for field in ("From", "To", "Cc", "Bcc", "Reply-To"):
-        if email.get(field) is None:
-            continue
-        for addr in email[field].split(","):
-            real_name, addr = parseaddr(addr)
-            try:
-                addresses.append(parse_email_address(addr))
-            except ValueError:
-                # Skip invalid email addresses
-                pass
+    values = [
+        value
+        for field in ("From", "To", "Cc", "Bcc", "Reply-To")
+        for value in email.get_all(field, [])
+    ]
+    for real_name, addr in getaddresses(values):
+        try:
+            addresses.append(parse_email_address(addr))
+        except ValueError:
+            # Skip invalid email addresses
+            pass
     return addresses
 
 
