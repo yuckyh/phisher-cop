@@ -7,7 +7,7 @@ from email.utils import parseaddr
 from bs4 import BeautifulSoup, Tag
 from html_sanitizer import Sanitizer
 
-from email_address import EmailAddress, parse_email_address
+from .email_address import EmailAddress, parse_email_address
 
 Email = message.Message
 

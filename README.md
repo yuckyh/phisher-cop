@@ -109,8 +109,8 @@ pip install -r requirements.txt
 5. Run the scripts
 
 ```bash
-python3 src/cli.py                 # Run the CLI
-python3 src/web.py                 # Run the web server
-python3 src/train.py               # Train the ML model
-python3 -m unittest tests/main.py  # Run the tests
+python3 src/cli.py         # Run the CLI
+python3 src/web.py         # Run the web server
+python3 src/train.py       # Train the ML model
+python3 -m unittest tests  # Run the tests
 ```

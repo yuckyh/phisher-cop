@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from domain import Domain, parse_domain
+from .domain import Domain, parse_domain
 
 
 @dataclass()

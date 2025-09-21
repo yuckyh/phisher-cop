@@ -3,8 +3,8 @@
 import numpy as np
 from numpy.typing import NDArray
 
-from model import Model, save_model
-from phisher_cop import MODEL_PATH
+from lib import MODEL_PATH
+from lib.model import Model, save_model
 
 
 def dummy_data(
@@ -18,7 +18,6 @@ def dummy_data(
 
 if __name__ == "__main__":
     # TODO: use real data instead of dummy data
-    # os.chdir(project_root)
     # train, val, test = load_data()
     # for split, name in zip((train, val, test), ("Train", "Validation", "Test")):
     #     print(f"{name} set: {len(split[0])} samples")

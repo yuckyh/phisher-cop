@@ -5,9 +5,11 @@ import shutil
 import zipfile
 from typing import TypeAlias
 
-DATA_DIR = "data"
+from . import PROJECT_ROOT
+
+DATA_DIR = os.path.join(PROJECT_ROOT, "data")
 DATA_HASH_EXPECTED = "4840f3937d6f6f3fc83bb6c7b1f5ec509ec71124eb6435641396987e9677d317"
-ZIP_PATH = "archive.zip"
+ZIP_PATH = os.path.join(PROJECT_ROOT, "archive.zip")
 ZIP_HASH_EXPECTED = "bfac1859ea48dd2105a6c351e2cf3b3c0c0995c0f9e55b996df6a740b5803a8a"
 
 SPLITS = [

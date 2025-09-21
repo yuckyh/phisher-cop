@@ -2,7 +2,7 @@ import os
 import unittest
 from tempfile import TemporaryDirectory
 
-from src.dataset import hash_dir, split_dir
+from src.lib.dataset import hash_dir, split_dir
 
 
 class TestDataset(unittest.TestCase):
