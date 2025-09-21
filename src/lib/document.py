@@ -109,9 +109,9 @@ def anchor_urls(dom: BeautifulSoup) -> set[urllib.parse.ParseResult]:
         url
         for anchor in dom.find_all("a", href=True)
         if isinstance(anchor, Tag)
-        if isinstance(href := anchor.get("href"), str)
+        and isinstance(href := anchor.get("href"), str)
         # Only valid URLs have a network location
-        if (url := normalize_url(href)).netloc
+        and (url := normalize_url(href)).netloc
     }
 
 
