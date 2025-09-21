@@ -46,12 +46,11 @@ def decode_payload(email: Email) -> str:
     payload = email.get_payload(decode=True)
     if payload is None:
         return ""
-    elif isinstance(payload, bytes):
+    if isinstance(payload, bytes):
         return payload.decode(encoding="latin-1")
-    elif isinstance(payload, str):
+    if isinstance(payload, str):
         return payload
-    else:
-        return str(payload)
+    return str(payload)
 
 
 def raw_payload(email: Email) -> str:
