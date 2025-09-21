@@ -116,12 +116,14 @@ def anchor_urls(dom: BeautifulSoup) -> set[urllib.parse.ParseResult]:
     }
 
 
-def token_urls(tokens: list[str]) -> tuple[set[urllib.parse.ParseResult], list[str]]:
-    """Iterates through tokens and returns a set of normalized URLs and a list of non-URL tokens.
+def token_urls(
+    raw_tokens: list[str],
+) -> tuple[set[urllib.parse.ParseResult], list[str]]:
+    """Iterates through `raw_tokens` and returns a set of normalized URLs and a list of non-URL tokens.
     The order of non-URL tokens is preserved."""
     urls = set()
     non_url_tokens = []
-    for token in tokens:
+    for token in raw_tokens:
         url = normalize_url(token)
         if url.netloc:  # Only valid URLs have a network location
             urls.add(url)
@@ -130,9 +132,17 @@ def token_urls(tokens: list[str]) -> tuple[set[urllib.parse.ParseResult], list[s
     return urls, non_url_tokens
 
 
-def dom_tokens(dom: BeautifulSoup) -> list[str]:
+def raw_dom_tokens(dom: BeautifulSoup) -> list[str]:
     """Returns the whitespace-separated tokens of the document's text content."""
     return dom.get_text(separator=" ").split()
+
+
+def tokenize_dom(dom: BeautifulSoup) -> tuple[set[urllib.parse.ParseResult], list[str]]:
+    """Returns a set of normalized URLs and a list of non-URL tokens from the document's text content.
+    The order of non-URL tokens is preserved."""
+    urls, tokens = token_urls(raw_dom_tokens(dom))
+    urls |= anchor_urls(dom)
+    return urls, tokens
 
 
 NON_ALPHANUMERIC_PATTERN = re.compile(
