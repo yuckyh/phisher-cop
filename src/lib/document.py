@@ -1,4 +1,4 @@
-"""Functions to sanitize and extract useful information from text documents."""
+"""Functions to parse and extract useful information from email documents."""
 
 import re
 import urllib.parse
