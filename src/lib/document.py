@@ -44,7 +44,14 @@ def email_from_input(
 def decode_payload(email: Email) -> str:
     assert not email.is_multipart()
     payload = email.get_payload(decode=True)
-    return bytes(payload).decode(encoding="latin-1")
+    if payload is None:
+        return ""
+    elif isinstance(payload, bytes):
+        return payload.decode(encoding="latin-1")
+    elif isinstance(payload, str):
+        return payload
+    else:
+        return str(payload)
 
 
 def raw_payload(email: Email) -> str:
