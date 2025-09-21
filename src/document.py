@@ -99,37 +99,3 @@ def get_words(tokens: list[str]) -> list[str]:
     words = [word for token in tokens for word in ''.join(' ' if not char.isalnum() else char for char in token).split(' ') if word and token not in {urllib.parse.urlunparse(url) for url in urls}]
 
     return words
-
-
-if __name__ == "__main__":
-    email = email_from_file("data/test/ham/0087.txt")
-    print("From:", email['From'])
-    print("To:", email['To'])
-    print("Cc:", email['Cc'])
-    print("Subject:", email['Subject'])
-    print()
-    print("Payload:")
-    print(payload_from_email(email))
-    print()
-    print("Sanitized Payload:")
-    print(sanitize_payload(email))
-    print()
-    print("Document:")
-    document = document_from_payload(payload_from_email(email))
-    print(document)
-    print()
-    print("Words:")
-    words = get_tokens(document)
-    print(words)
-    print()
-    print("Tokens:")
-    tokens = get_words(words)
-    print(tokens)
-    print()
-    print("URLs:")
-    for url in urls_from_payload(payload_from_email(email)):
-        print(url)
-    print()
-    print("Email Addresses:")
-    for address in get_email_addresses(email):
-        print(address)
