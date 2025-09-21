@@ -187,20 +187,6 @@ wheels = [
 ]
 
 [[package]]
-name = "html-sanitizer"
-version = "2.6.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "beautifulsoup4" },
-    { name = "lxml" },
-    { name = "lxml-html-clean" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/87/c8/1c8d770748ba26d6168c763a212c8311f6052dc1763b3678c7bfaeef0f7f/html_sanitizer-2.6.0.tar.gz", hash = "sha256:e20bbc92df161d16c04aace70b2f69f482bd1e60d40aaa8b3209a2aeb94cd524", size = 17843, upload-time = "2025-06-30T12:30:51.057Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c5/98/c882de495366081c290f6fcbdf8f5ee1a378715d5c09c5275c0f0fe8c372/html_sanitizer-2.6.0-py3-none-any.whl", hash = "sha256:44c8ef924358a092f13d7c63f6385b05994e5a328b0f11d1db421d88980b7c3f", size = 15564, upload-time = "2025-06-30T12:30:52.376Z" },
-]
-
-[[package]]
 name = "idna"
 version = "3.10"
 source = { registry = "https://pypi.org/simple" }
@@ -299,18 +285,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/25/6c/6f9610fbf1de002048e80585ea4719591921a0316a8565968737d9f125ca/lxml-6.0.1-cp314-cp314-win32.whl", hash = "sha256:537b6cf1c5ab88cfd159195d412edb3e434fee880f206cbe68dff9c40e17a68a", size = 3669595, upload-time = "2025-08-22T10:34:41.783Z" },
     { url = "https://files.pythonhosted.org/packages/72/a5/506775e3988677db24dc75a7b03e04038e0b3d114ccd4bccea4ce0116c15/lxml-6.0.1-cp314-cp314-win_amd64.whl", hash = "sha256:911d0a2bb3ef3df55b3d97ab325a9ca7e438d5112c102b8495321105d25a441b", size = 4079818, upload-time = "2025-08-22T10:34:44.04Z" },
     { url = "https://files.pythonhosted.org/packages/0a/44/9613f300201b8700215856e5edd056d4e58dd23368699196b58877d4408b/lxml-6.0.1-cp314-cp314-win_arm64.whl", hash = "sha256:2834377b0145a471a654d699bdb3a2155312de492142ef5a1d426af2c60a0a31", size = 3753901, upload-time = "2025-08-22T10:34:45.799Z" },
-]
-
-[[package]]
-name = "lxml-html-clean"
-version = "0.4.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "lxml" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/79/b6/466e71db127950fb8d172026a8f0a9f0dc6f64c8e78e2ca79f252e5790b8/lxml_html_clean-0.4.2.tar.gz", hash = "sha256:91291e7b5db95430abf461bc53440964d58e06cc468950f9e47db64976cebcb3", size = 21622, upload-time = "2025-04-09T11:33:59.432Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4e/0b/942cb7278d6caad79343ad2ddd636ed204a47909b969d19114a3097f5aa3/lxml_html_clean-0.4.2-py3-none-any.whl", hash = "sha256:74ccfba277adcfea87a1e9294f47dd86b05d65b4da7c5b07966e3d5f3be8a505", size = 14184, upload-time = "2025-04-09T11:33:57.988Z" },
 ]
 
 [[package]]
@@ -421,7 +395,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "flask" },
-    { name = "html-sanitizer" },
+    { name = "lxml" },
     { name = "numpy" },
     { name = "scikit-learn" },
     { name = "tldextract" },
@@ -437,7 +411,7 @@ dev = [
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.13.5" },
     { name = "flask", specifier = ">=3.1.2" },
-    { name = "html-sanitizer", specifier = ">=2.6.0" },
+    { name = "lxml", specifier = ">=6.0.1" },
     { name = "numpy", specifier = ">=2.3.2" },
     { name = "scikit-learn", specifier = ">=1.7.1" },
     { name = "tldextract", specifier = ">=5.3.0" },
