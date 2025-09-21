@@ -41,14 +41,20 @@ def email_from_input(
     return email
 
 
+def decode_payload(email: Email) -> str:
+    assert not email.is_multipart()
+    payload = email.get_payload(decode=True)
+    return bytes(payload).decode(encoding="utf-8")
+
+
 def payload_from_email(email: Email) -> str:
     if not email.is_multipart():
-        return str(email.get_payload())
+        return decode_payload(email)
 
     parts = [
-        str(part.get_payload())
+        decode_payload(part)
         for part in email.walk()
-        if part.get_content_type() == "text/plain"
+        if part.get_content_type() in {"text/plain", "text/html"}
     ]
     return "\n".join(parts)
 
