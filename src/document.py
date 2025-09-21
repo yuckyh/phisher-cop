@@ -18,12 +18,14 @@ def email_from_file(path: str) -> message.Message:
 
 
 def email_from_input(
-    sender: str,
-    recipient: str,
-    cc: list[str],
-    subject: str,
-    payload: str,
-) -> message.Message:
+    sender: str, recipient: str, cc: list[str] | None, subject: str, payload: str
+):
+    if not sender or not recipient or not subject or not payload:
+        raise ValueError(
+            "Sender, recipient, subject, and payload must not be empty or None."
+        )
+    if cc is None:
+        cc = []
     email = message.Message()
     email["From"] = sender
     email["To"] = recipient
@@ -68,7 +70,9 @@ def anchor_urls_from_payload(payload: str) -> set[urllib.parse.ParseResult]:
 
 
 def urls_from_payload(payload: str) -> set[urllib.parse.ParseResult]:
-    return urls_from_words(get_tokens(document_from_payload(payload))) | anchor_urls_from_payload(payload)
+    return urls_from_words(
+        get_tokens(document_from_payload(payload))
+    ) | anchor_urls_from_payload(payload)
 
 
 def document_from_payload(payload: str) -> str:
@@ -81,21 +85,29 @@ def get_email_addresses(email: message.Message) -> list[EmailAddress]:
         return [
             parse_email_address(parseaddr(addr)[1])
             for field in ("From", "To", "Cc", "Bcc", "Reply-To")
+            if email.get(field) is not None
             for addr in email[field].split(",")
         ]
     except AttributeError:
         pass
-    except ValueError:
-        pass
-    return []
 
 
 def get_tokens(document: str) -> list[str]:
-    return [tokens.replace('\n', '') for tokens in document.split(' ') if tokens and tokens != '\n']
+    return [
+        tokens.replace("\n", "")
+        for tokens in document.split(" ")
+        if tokens and tokens != "\n"
+    ]
 
 
 def get_words(tokens: list[str]) -> list[str]:
     urls = urls_from_words(tokens)
-    words = [word for token in tokens for word in ''.join(' ' if not char.isalnum() else char for char in token).split(' ') if word and token not in {urllib.parse.urlunparse(url) for url in urls}]
-
+    url_strings = {urllib.parse.urlunparse(url) for url in urls}
+    words = []
+    for token in tokens:
+        # Replace non-alphanumeric characters with spaces
+        cleaned_token = "".join(" " if not char.isalnum() else char for char in token)
+        for word in cleaned_token.split(" "):
+            if word and token not in url_strings:
+                words.append(word)
     return words
