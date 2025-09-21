@@ -9,16 +9,22 @@ from html_sanitizer import Sanitizer
 
 from email_address import EmailAddress, parse_email_address
 
+Email = message.Message
+
 
 # TODO: reconsider this to be file upload specific
 # e.g. different preprocessing logic for web input vs. file input
-def email_from_file(path: str) -> message.Message:
+def email_from_file(path: str) -> Email:
     with open(path, "r", encoding="latin-1") as file:
         return message_from_file(file)
 
 
 def email_from_input(
-    sender: str, recipient: str, cc: list[str] | None, subject: str, payload: str
+    sender: str,
+    recipient: str,
+    cc: list[str] | None,
+    subject: str,
+    payload: str,
 ):
     if not sender or not recipient or not subject or not payload:
         raise ValueError(
@@ -26,7 +32,7 @@ def email_from_input(
         )
     if cc is None:
         cc = []
-    email = message.Message()
+    email = Email()
     email["From"] = sender
     email["To"] = recipient
     email["Cc"] = ", ".join(cc)
@@ -35,7 +41,7 @@ def email_from_input(
     return email
 
 
-def payload_from_email(email: message.Message) -> str:
+def payload_from_email(email: Email) -> str:
     if not email.is_multipart():
         return str(email.get_payload())
 
@@ -51,7 +57,7 @@ def sanitize_html(html: str) -> str:
     return Sanitizer().sanitize(html)
 
 
-def sanitize_payload(email: message.Message) -> str:
+def sanitize_payload(email: Email) -> str:
     return sanitize_html(payload_from_email(email))
 
 
@@ -80,7 +86,7 @@ def document_from_payload(payload: str) -> str:
     return document
 
 
-def get_email_addresses(email: message.Message) -> list[EmailAddress]:
+def get_email_addresses(email: Email) -> list[EmailAddress]:
     try:
         return [
             parse_email_address(parseaddr(addr)[1])
