@@ -1,11 +1,11 @@
 """Functions to sanitize and extract useful information from text documents."""
 
+import re
 import urllib.parse
 from email import message, message_from_file
 from email.utils import parseaddr
 
 from bs4 import BeautifulSoup, Tag
-from html_sanitizer import Sanitizer
 
 from .email_address import EmailAddress, parse_email_address
 
@@ -44,10 +44,10 @@ def email_from_input(
 def decode_payload(email: Email) -> str:
     assert not email.is_multipart()
     payload = email.get_payload(decode=True)
-    return bytes(payload).decode(encoding="utf-8")
+    return bytes(payload).decode(encoding="latin-1")
 
 
-def payload_from_email(email: Email) -> str:
+def raw_payload(email: Email) -> str:
     if not email.is_multipart():
         return decode_payload(email)
 
@@ -59,67 +59,85 @@ def payload_from_email(email: Email) -> str:
     return "\n".join(parts)
 
 
-def sanitize_html(html: str) -> str:
-    return Sanitizer().sanitize(html)
+def payload_dom(email: Email) -> BeautifulSoup:
+    # payload is HTML or plain text, but plain text is a subset of HTML
+    payload = raw_payload(email)
+    return BeautifulSoup(payload, features="lxml")
 
 
-def sanitize_payload(email: Email) -> str:
-    return sanitize_html(payload_from_email(email))
+def email_addresses(email: Email) -> list[EmailAddress]:
+    addresses = []
+    for field in ("From", "To", "Cc", "Bcc", "Reply-To"):
+        if email.get(field) is None:
+            continue
+        for addr in email[field].split(","):
+            real_name, addr = parseaddr(addr)
+            try:
+                addresses.append(parse_email_address(addr))
+            except ValueError:
+                # Skip invalid email addresses
+                pass
+    return addresses
 
 
-def urls_from_words(words: list[str]) -> set[urllib.parse.ParseResult]:
-    parsed_urls = {urllib.parse.urlparse(word) for word in words}
-    return {url for url in parsed_urls if url.netloc}
+def normalize_url(url: str) -> urllib.parse.ParseResult:
+    """Normalizes a URL by lowercasing, unquoting, stripping trailing slashes
+    and removing params, query, and fragment."""
+    # Lowering must be done before unquoting because capital letters can be percent-encoded
+    unquoted_url = urllib.parse.unquote(url.lower())
+    parsed_url = urllib.parse.urlparse(unquoted_url)
+    return urllib.parse.ParseResult(
+        scheme=parsed_url.scheme,
+        netloc=parsed_url.netloc,
+        path=parsed_url.path.rstrip("/"),
+        params="",
+        query="",
+        fragment="",
+    )
 
 
-def anchor_urls_from_payload(payload: str) -> set[urllib.parse.ParseResult]:
-    soup = BeautifulSoup(payload, "html.parser")
+def anchor_urls(dom: BeautifulSoup) -> set[urllib.parse.ParseResult]:
+    """Returns a set of normalized URLs from the href attributes of anchor tags in the document."""
     return {
-        urllib.parse.urlparse(str(a.get("href")))
-        for a in soup.find_all("a", href=True)
-        if isinstance(a, Tag)
+        url
+        for anchor in dom.find_all("a", href=True)
+        if isinstance(anchor, Tag)
+        if isinstance(href := anchor.get("href"), str)
+        # Only valid URLs have a network location
+        if (url := normalize_url(href)).netloc
     }
 
 
-def urls_from_payload(payload: str) -> set[urllib.parse.ParseResult]:
-    return urls_from_words(
-        get_tokens(document_from_payload(payload))
-    ) | anchor_urls_from_payload(payload)
-
-
-def document_from_payload(payload: str) -> str:
-    document = BeautifulSoup(payload, features="lxml").get_text(separator=" ")
-    return document
-
-
-def get_email_addresses(email: Email) -> list[EmailAddress]:
-    try:
-        return [
-            parse_email_address(parseaddr(addr)[1])
-            for field in ("From", "To", "Cc", "Bcc", "Reply-To")
-            if email.get(field) is not None
-            for addr in email[field].split(",")
-        ]
-    except AttributeError:
-        pass
-
-
-def get_tokens(document: str) -> list[str]:
-    return [
-        tokens.replace("\n", "")
-        for tokens in document.split(" ")
-        if tokens and tokens != "\n"
-    ]
-
-
-def get_words(tokens: list[str]) -> list[str]:
-    urls = urls_from_words(tokens)
-    url_strings = {urllib.parse.urlunparse(url) for url in urls}
-    words = []
+def token_urls(tokens: list[str]) -> tuple[set[urllib.parse.ParseResult], list[str]]:
+    """Iterates through tokens and returns a set of normalized URLs and a list of non-URL tokens.
+    The order of non-URL tokens is preserved."""
+    urls = set()
+    non_url_tokens = []
     for token in tokens:
-        # Replace non-alphanumeric characters with spaces
-        cleaned_token = "".join(" " if not char.isalnum() else char for char in token)
-        for word in cleaned_token.split(" "):
-            if word and token not in url_strings:
-                words.append(word)
-    return words
+        url = normalize_url(token)
+        if url.netloc:  # Only valid URLs have a network location
+            urls.add(url)
+        else:
+            non_url_tokens.append(token)
+    return urls, non_url_tokens
+
+
+def dom_tokens(dom: BeautifulSoup) -> list[str]:
+    """Returns the whitespace-separated tokens of the document's text content."""
+    return dom.get_text(separator=" ").split()
+
+
+NON_ALPHANUMERIC_PATTERN = re.compile(
+    r"[^a-z0-9]+",
+    re.IGNORECASE | re.MULTILINE | re.UNICODE,
+)
+
+
+def words_from_tokens(tokens: list[str]) -> list[str]:
+    """Returns all contiguous alphanumeric substrings from the tokens, lowercased."""
+    return [
+        word.lower()
+        for token in tokens
+        for word in NON_ALPHANUMERIC_PATTERN.split(token)
+        if word
+    ]
