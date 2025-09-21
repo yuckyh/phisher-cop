@@ -68,9 +68,7 @@ def anchor_urls_from_payload(payload: str) -> set[urllib.parse.ParseResult]:
 
 
 def urls_from_payload(payload: str) -> set[urllib.parse.ParseResult]:
-    return urls_from_words(
-        get_words(document_from_payload(payload))
-    ) | anchor_urls_from_payload(payload)
+    return urls_from_words(get_tokens(document_from_payload(payload))) | anchor_urls_from_payload(payload)
 
 
 def document_from_payload(payload: str) -> str:
@@ -92,7 +90,46 @@ def get_email_addresses(email: message.Message) -> list[EmailAddress]:
     return []
 
 
-def get_words(document: str) -> list[str]:
-    return [
-        word.replace("\n", "") for word in document.split(" ") if word and word != "\n"
-    ]
+def get_tokens(document: str) -> list[str]:
+    return [tokens.replace('\n', '') for tokens in document.split(' ') if tokens and tokens != '\n']
+
+
+def get_words(tokens: list[str]) -> list[str]:
+    urls = urls_from_words(tokens)
+    words = [word for token in tokens for word in ''.join(' ' if not char.isalnum() else char for char in token).split(' ') if word and token not in {urllib.parse.urlunparse(url) for url in urls}]
+
+    return words
+
+
+if __name__ == "__main__":
+    email = email_from_file("data/test/ham/0087.txt")
+    print("From:", email['From'])
+    print("To:", email['To'])
+    print("Cc:", email['Cc'])
+    print("Subject:", email['Subject'])
+    print()
+    print("Payload:")
+    print(payload_from_email(email))
+    print()
+    print("Sanitized Payload:")
+    print(sanitize_payload(email))
+    print()
+    print("Document:")
+    document = document_from_payload(payload_from_email(email))
+    print(document)
+    print()
+    print("Words:")
+    words = get_tokens(document)
+    print(words)
+    print()
+    print("Tokens:")
+    tokens = get_words(words)
+    print(tokens)
+    print()
+    print("URLs:")
+    for url in urls_from_payload(payload_from_email(email)):
+        print(url)
+    print()
+    print("Email Addresses:")
+    for address in get_email_addresses(email):
+        print(address)
