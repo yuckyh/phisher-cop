@@ -3,6 +3,7 @@ import os
 import random
 import shutil
 import zipfile
+from pathlib import Path
 from typing import TypeAlias
 
 from . import PROJECT_ROOT
@@ -43,8 +44,8 @@ def hash_dir(dir_path: str) -> str:
     for root, _, files in sorted(os.walk(dir_path)):
         for file in sorted(files):
             file_path = os.path.join(root, file)
-            relative_path = os.path.relpath(file_path, dir_path)
-            hash_func.update(relative_path.encode())
+            relative_path = Path(file_path).relative_to(dir_path)
+            hash_func.update(relative_path.as_posix().encode())
             update_hash(hash_func, file_path)
     return hash_func.hexdigest()
 
