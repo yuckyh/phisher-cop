@@ -1,8 +1,14 @@
 """Entry point for the command line interface."""
 
-import os
-
 import click
+
+from lib.document import (
+    email_addresses,
+    email_from_file,
+    payload_dom,
+    tokenize_dom,
+    words_from_tokens,
+)
 
 
 @click.command()
@@ -10,8 +16,14 @@ import click
 def main(filepath: str):
     """Reads an email from the file at FILEPATH and prints a confidence score of
     how likely it is to be a phishing email to stdout, along with relevant stats"""
-    filepath = os.path.realpath(filepath)
-    print(f"{filepath=}")
+    email = email_from_file(filepath)
+    addresses = email_addresses(email)
+    dom = payload_dom(email)
+    urls, tokens = tokenize_dom(dom)
+    words = words_from_tokens(tokens)
+    print(f"{addresses=}")
+    print(f"{urls=}")
+    print(f"{words=}")
     # TODO: implement the rest
 
 
