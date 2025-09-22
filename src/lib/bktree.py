@@ -69,7 +69,7 @@ class BKTree:
         return False
 
     def __repr__(self) -> str:
-        return f"BKTree(root={self.root},distance_fn={self.distance_fn})"
+        return f"BKTree(root={self.root},distance_fn={self.distance_fn})"  # pragma: no cover
 
 
 def levenshtein_distance(s1: str, s2: str) -> int:
