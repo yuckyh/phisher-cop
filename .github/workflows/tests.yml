@@ -1,0 +1,21 @@
+name: Run tests
+on:
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+jobs:
+  format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.16"
+          enable-cache: true
+
+      - name: Run Tests
+        run: |
+          uv run python -m unittest tests
