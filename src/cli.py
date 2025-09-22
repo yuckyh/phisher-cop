@@ -2,6 +2,7 @@
 
 import click
 
+from lib import MODEL_PATH
 from lib.document import (
     email_addresses,
     email_from_file,
@@ -13,7 +14,15 @@ from lib.document import (
 
 @click.command()
 @click.argument("filepath", type=click.Path(exists=True, dir_okay=False, readable=True))
-def main(filepath: str):
+@click.option(
+    "model_path",
+    "-m",
+    "--model-path",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    default=MODEL_PATH,
+    help="Path to the trained model file.",
+)
+def main(filepath: str, model_path: str):
     """Reads an email from the file at FILEPATH and prints a confidence score of
     how likely it is to be a phishing email to stdout, along with relevant stats"""
     email = email_from_file(filepath)
@@ -21,6 +30,7 @@ def main(filepath: str):
     dom = payload_dom(email)
     urls, tokens = tokenize_dom(dom)
     words = words_from_tokens(tokens)
+    print(f"{model_path=}")
     print(f"{addresses=}")
     print(f"{urls=}")
     print(f"{words=}")
