@@ -12,14 +12,12 @@ class BKTreeNode:
 class BKTree:
     """A BK-tree for efficiently finding close matches to strings."""
 
-    root: BKTreeNode | None = None
-    distance_fn: Callable[[str, str], int]
-
     def __init__(
         self,
         distance_fn: Callable[[str, str], int],
         items: Iterable[str],
     ):
+        self.root: BKTreeNode | None = None
         self.distance_fn = distance_fn
         for s in items:
             self.insert(s)
