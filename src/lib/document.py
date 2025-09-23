@@ -2,7 +2,7 @@
 
 import re
 import urllib.parse
-from email import message, message_from_file
+from email import message, message_from_bytes
 from email.utils import getaddresses
 
 from bs4 import BeautifulSoup, Tag
@@ -16,8 +16,8 @@ Email = message.Message
 # TODO: reconsider this to be file upload specific
 # e.g. different preprocessing logic for web input vs. file input
 def email_from_file(path: str) -> Email:
-    with open(path, "r", encoding="latin-1") as file:
-        return message_from_file(file)
+    with open(path, "rb") as file:
+        return message_from_bytes(file.read())
 
 
 def email_from_input(
@@ -46,11 +46,15 @@ def email_from_input(
 
 def decode_payload(email: Email) -> str:
     assert not email.is_multipart()
+    # decode=True decodes transfer-encoding (e.g. base64, quoted-printable)
     payload = email.get_payload(decode=True)
     if payload is None:
         return ""
     if isinstance(payload, bytes):
-        return payload.decode(encoding="latin-1")
+        # The payload is in some form of bytes, decode it using the email's charset
+        return payload.decode(
+            encoding=email.get_content_charset() or "utf-8", errors="replace"
+        )
     if isinstance(payload, str):
         return payload
     return str(payload)
@@ -60,11 +64,7 @@ def raw_payload(email: Email) -> str:
     if not email.is_multipart():
         return decode_payload(email)
 
-    parts = [
-        decode_payload(part)
-        for part in email.walk()
-        if part.get_content_type() in {"text/plain", "text/html"}
-    ]
+    parts = [decode_payload(part) for part in email.walk()]
     return "\n".join(parts)
 
 
