@@ -23,7 +23,7 @@ This is the mail system at host example.com. I’m sorry to have to inform you t
 
 """
                 )
-        email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
+            email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
         self.assertEqual(
             email["From"], "Mail Delivery Subsystem <postmaster@example.com>"
         )
@@ -45,7 +45,7 @@ This is the mail system at host example.com. I’m sorry to have to inform you t
 --- Original message ---
 """
                 )
-        email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
+            email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
         payload = raw_payload(email)
         self.assertIn("This is the mail system at host", payload)
         self.assertIn("It’s attached below.", payload)
@@ -70,7 +70,7 @@ Subject: Undelivered Mail Returned to Sender
 </html>
 """
                 )
-        email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
+            email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
         payload = payload_dom(email)
         expected_payload = "Hello World! This is a test. Example"
         self.assertEqual(payload, expected_payload)
@@ -94,7 +94,7 @@ Subject: Undelivered Mail Returned to Sender
 </html>
 """
                 )
-        email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
+            email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
         dom = payload_dom(email)
         _, tokens = tokenize_dom(dom)
         expected_tokens = [
