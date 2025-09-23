@@ -7,7 +7,7 @@ from email.utils import getaddresses
 
 from bs4 import BeautifulSoup, Tag
 
-from lib.domain import Url
+from lib.domain import Domain, Url, parse_domain
 from lib.email_address import EmailAddress, parse_email_address
 
 Email = message.Message
@@ -143,6 +143,10 @@ def tokenize_dom(dom: BeautifulSoup) -> tuple[set[Url], list[str]]:
     urls, tokens = token_urls(raw_dom_tokens(dom))
     urls |= anchor_urls(dom)
     return urls, tokens
+
+
+def domains_from_urls(urls: set[urllib.parse.ParseResult]) -> list[Domain]:
+    return [parse_domain(url) for url in urls]
 
 
 NON_ALPHANUMERIC_PATTERN = re.compile(
