@@ -1,9 +1,18 @@
 import re
+from enum import Enum
 
-from .document import email_addresses, payload_dom, tokenize_dom
+from typing_extensions import Iterable
 
-# from .email_address import parse_email_address
-from .domain import parse_domain
+from .document import Email
+from .domain import Url
+from .email_address import parse_email_address
+
+
+class HostType(Enum):
+    IP = 0
+    DOMAIN = 1
+    UNKNOWN = 2
+
 
 IP_ADDRESS_PATTERN = re.compile(
     r"(^(?:\d{1,3}\.){3}\d{1,3}$)"  # IPv4
@@ -12,35 +21,21 @@ IP_ADDRESS_PATTERN = re.compile(
 )
 
 
-def is_ip_address(host: str) -> bool:
-    """Check if the given host string is an IP address (IPv4 or IPv6)."""
-    return IP_ADDRESS_PATTERN.match(host) is not None
+def host_type(host: str) -> HostType:
+    """Return the type of the given host string (IP address or domain)."""
+    return HostType.DOMAIN if IP_ADDRESS_PATTERN.match(host) is None else HostType.IP
 
 
-def sender_domain_type(email) -> str:
-    """
-    Check if the sender's domain is a normal domain or an IP.
-    Returns "ip" or "domain".
-    """
-    addrs = email_addresses(email)
-    if not addrs:
-        return "unknown"
-    sender = addrs[0]  # First address is usually the sender
-    host = sender.domain.domain_name if sender.domain.domain_name else sender.domain.tld
-    return "ip" if is_ip_address(host) else "domain"
+def sender_domain_type(email: Email) -> HostType:
+    """Check if the sender's domain is a normal domain or an IP."""
+    sender = parse_email_address(email["Sender"])
+    if not sender:
+        return HostType.UNKNOWN
+
+    host = f"{sender.domain.domain_name}.{sender.domain.tld}"
+    return host_type(host)
 
 
-def body_url_types(email) -> list[tuple[str, str]]:
-    """
-    Extract all URLs from the email body and check whether each is a domain or IP.
-    Returns list of tuples (url, "ip"/"domain").
-    """
-    dom = payload_dom(email)
-    urls, _ = tokenize_dom(dom)
-    results = []
-    for url in urls:
-        parsed = parse_domain(url.geturl())  # reuse your domain parser
-        host = parsed.domain_name if parsed.domain_name else parsed.tld
-        label = "ip" if is_ip_address(host) else "domain"
-        results.append((url.geturl(), label))
-    return results
+def url_types(urls: Iterable[Url]) -> list[HostType]:
+    """Check whether each URL is a domain or IP."""
+    return [host_type(url.hostname or url.netloc) for url in urls]
