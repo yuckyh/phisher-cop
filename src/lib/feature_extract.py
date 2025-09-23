@@ -1,5 +1,5 @@
-import re
 from enum import Enum
+from ipaddress import ip_address
 
 from typing_extensions import Iterable
 
@@ -14,16 +14,13 @@ class HostType(Enum):
     UNKNOWN = 2
 
 
-IP_ADDRESS_PATTERN = re.compile(
-    r"(^(?:\d{1,3}\.){3}\d{1,3}$)"  # IPv4
-    "|"
-    r"(^\[?[0-9a-fA-F:]+\]?$)"  # IPv6
-)
-
-
 def host_type(host: str) -> HostType:
     """Return the type of the given host string (IP address or domain)."""
-    return HostType.DOMAIN if IP_ADDRESS_PATTERN.match(host) is None else HostType.IP
+    try:
+        ip_address(host)
+        return HostType.IP
+    except ValueError:
+        return HostType.DOMAIN
 
 
 def sender_domain_type(email: Email) -> HostType:
