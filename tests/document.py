@@ -9,7 +9,7 @@ class TestDocument(unittest.TestCase):
     def test_email_from_file(self):
         with TemporaryDirectory() as tmpdir:
             with open(
-                os.path.join(tmpdir, "test_mail.txt"), "w", encoding="utf-8"
+                os.path.join(tmpdir, "test_mail.txt"), "w", encoding="latin-1"
             ) as f:
                 f.write(
                     """
@@ -34,7 +34,7 @@ This is the mail system at host example.com. I’m sorry to have to inform you t
     def test_raw_payload(self):
         with TemporaryDirectory() as tmpdir:
             with open(
-                os.path.join(tmpdir, "test_mail.txt"), "w", encoding="utf-8"
+                os.path.join(tmpdir, "test_mail.txt"), "w", encoding="latin-1"
             ) as f:
                 f.write(
                     """
@@ -54,7 +54,7 @@ This is the mail system at host example.com. I’m sorry to have to inform you t
     def test_payload_dom(self):
         with TemporaryDirectory() as tmpdir:
             with open(
-                os.path.join(tmpdir, "test_mail.txt"), "w", encoding="utf-8"
+                os.path.join(tmpdir, "test_mail.txt"), "w", encoding="latin-1"
             ) as f:
                 f.write(
                     """
@@ -78,7 +78,7 @@ Subject: Undelivered Mail Returned to Sender
     def test_tokenize_dom(self):
         with TemporaryDirectory() as tmpdir:
             with open(
-                os.path.join(tmpdir, "test_mail.txt"), "w", encoding="utf-8"
+                os.path.join(tmpdir, "test_mail.txt"), "w", encoding="latin-1"
             ) as f:
                 f.write(
                     """
