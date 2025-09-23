@@ -1,5 +1,7 @@
 import re
-from .document import payload_dom, tokenize_dom, email_addresses
+
+from .document import email_addresses, payload_dom, tokenize_dom
+
 # from .email_address import parse_email_address
 from .domain import parse_domain
 
@@ -7,9 +9,11 @@ from .domain import parse_domain
 IPV4_PATTERN = re.compile(r"^(?:\d{1,3}\.){3}\d{1,3}$")
 IPV6_PATTERN = re.compile(r"^\[?[0-9a-fA-F:]+\]?$")
 
+
 def is_ip_address(host: str) -> bool:
     """Check if the given host string is an IP address (IPv4 or IPv6)."""
     return bool(IPV4_PATTERN.match(host) or IPV6_PATTERN.match(host))
+
 
 def sender_domain_type(email) -> str:
     """
@@ -22,6 +26,7 @@ def sender_domain_type(email) -> str:
     sender = addrs[0]  # First address is usually the sender
     host = sender.domain.domain_name if sender.domain.domain_name else sender.domain.tld
     return "ip" if is_ip_address(host) else "domain"
+
 
 def body_url_types(email) -> list[tuple[str, str]]:
     """
@@ -37,4 +42,3 @@ def body_url_types(email) -> list[tuple[str, str]]:
         label = "ip" if is_ip_address(host) else "domain"
         results.append((url.geturl(), label))
     return results
-
