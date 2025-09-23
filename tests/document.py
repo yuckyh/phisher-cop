@@ -8,22 +8,22 @@ from src.lib.document import email_from_file, payload_dom, raw_payload, tokenize
 class TestDocument(unittest.TestCase):
     def test_email_from_file(self):
         with TemporaryDirectory() as tmpdir:
-            with open(
-                os.path.join(tmpdir, "test_mail.txt"), "w", encoding="latin-1"
-            ) as f:
+            with open(os.path.join(tmpdir, "test_mail.txt"), "w") as f:
                 f.write(
-                    """
-From: Mail Delivery Subsystem <postmaster@example.com>
-To: recipient@example.com
-Subject: Undelivered Mail Returned to Sender
-
-This is the mail system at host example.com. I’m sorry to have to inform you that your message could not be delivered to one or more recipients. It’s attached below.
-
---- Original message ---
-
-"""
+                    (
+                        "From: Mail Delivery Subsystem <postmaster@example.com>\r"
+                        "To: recipient@example.com\r"
+                        "Content-Type: text/plain; charset=latin-1\r"
+                        "Subject: Undelivered Mail Returned to Sender\r"
+                        "\r"
+                        "This is the mail system at host example.com. I’m sorry to have to inform you that your message could not be delivered to one or more recipients. It’s attached below.\r"
+                        "\r"
+                        "--- Original message ---\r"
+                    )
                 )
             email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
+        self.assertEqual(email.get_content_type(), "text/plain")
+        self.assertEqual(email.get_content_charset(), "latin-1")
         self.assertEqual(
             email["From"], "Mail Delivery Subsystem <postmaster@example.com>"
         )
@@ -33,86 +33,71 @@ This is the mail system at host example.com. I’m sorry to have to inform you t
 
     def test_raw_payload(self):
         with TemporaryDirectory() as tmpdir:
-            with open(
-                os.path.join(tmpdir, "test_mail.txt"), "w", encoding="latin-1"
-            ) as f:
+            with open(os.path.join(tmpdir, "test_mail.txt"), "w") as f:
                 f.write(
-                    """
-From: Mail Delivery Subsystem <postmaster@example.com>
-To: recipient@example.com
-Subject: Undelivered Mail Returned to Sender
-This is the mail system at host example.com. I’m sorry to have to inform you that your message could not be delivered to one or more recipients. It’s attached below.
---- Original message ---
-"""
+                    (
+                        "From: Mail Delivery Subsystem <postmaster@example.com>\r"
+                        "To: recipient@example.com\r"
+                        "Subject: Undelivered Mail Returned to Sender\r"
+                        "This is the mail system at host example.com. Im sorry to have to inform you that your message could not be delivered to one or more recipients. Its attached below.\r"
+                        "--- Original message ---\r"
+                    )
                 )
             email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
         payload = raw_payload(email)
         self.assertIn("This is the mail system at host", payload)
-        self.assertIn("It’s attached below.", payload)
+        self.assertIn("Its attached below.", payload)
         self.assertIn("--- Original message ---", payload)
 
     def test_payload_dom(self):
         with TemporaryDirectory() as tmpdir:
-            with open(
-                os.path.join(tmpdir, "test_mail.txt"), "w", encoding="latin-1"
-            ) as f:
+            with open(os.path.join(tmpdir, "test_mail.txt"), "w") as f:
                 f.write(
-                    """
-From: Mail Delivery Subsystem <postmaster@example.com>
-To: recipient@example.com
-Subject: Undelivered Mail Returned to Sender
-<html>
-    <body>
-        <h1>Hello World!</h1>
-        <p>This is a test.</p>
-        <a href="http://example.com">Example</a>
-    </body>
-</html>
-"""
+                    (
+                        "From: Mail Delivery Subsystem <postmaster@example.com>\r"
+                        "To: recipient@example.com\r"
+                        "Subject: Undelivered Mail Returned to Sender\r"
+                        "<html>\r"
+                        "    <body>\r"
+                        "        <h1>Hello World!</h1>\r"
+                        "        <p>This is a test.</p>\r"
+                        "        <a href='http://example.com'>Example</a>\r"
+                        "    </body>\r"
+                        "</html>\r"
+                    )
                 )
             email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
         payload = payload_dom(email)
-        expected_payload = "Hello World! This is a test. Example"
-        self.assertEqual(payload, expected_payload)
+        expected_payload = '<html> <body> <h1>Hello World!</h1> <p>This is a test.</p> <a href="http://example.com">Example</a> </body> </html> '
+        self.assertEqual(str(payload), expected_payload)
 
     def test_tokenize_dom(self):
         with TemporaryDirectory() as tmpdir:
-            with open(
-                os.path.join(tmpdir, "test_mail.txt"), "w", encoding="latin-1"
-            ) as f:
+            with open(os.path.join(tmpdir, "test_mail.txt"), "w") as f:
                 f.write(
-                    """
-From: Mail Delivery Subsystem <postmaster@example.com>
-To: recipient@example.com
-Subject: Undelivered Mail Returned to Sender
-<html>
-    <body>
-        <h1>Hello World!</h1>
-        <p>This is a test.</p>
-        <a href="http://example.com">Example</a>
-    </body>
-</html>
-"""
+                    (
+                        "From: Mail Delivery Subsystem <postmaster@example.com>\r"
+                        "To: recipient@example.com\r"
+                        "Subject: Undelivered Mail Returned to Sender\r"
+                        "<html>\r"
+                        "    <body>\r"
+                        "        <h1>Hello World!</h1>\r"
+                        "        <p>This is a test.</p>\r"
+                        "        <a href='http://example.com'>Example</a>\r"
+                        "    </body>\r"
+                        "</html>\r"
+                    )
                 )
             email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
         dom = payload_dom(email)
         _, tokens = tokenize_dom(dom)
         expected_tokens = [
-            "html",
-            "body",
-            "h1",
             "Hello",
-            "World",
-            "p",
+            "World!",
             "This",
             "is",
             "a",
-            "test",
-            "a",
-            "href",
-            "http",
-            "example",
-            "com",
+            "test.",
             "Example",
         ]
         self.assertEqual(tokens, expected_tokens)
