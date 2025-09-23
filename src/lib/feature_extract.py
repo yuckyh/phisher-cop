@@ -31,11 +31,11 @@ def sender_domain_type(email: Email) -> HostType:
     sender = parse_email_address(email["Sender"])
     if not sender:
         return HostType.UNKNOWN
-
-    host = f"{sender.domain.domain_name}.{sender.domain.tld}"
-    return host_type(host)
+    return host_type(sender.domain.host)
 
 
 def url_types(urls: Iterable[Url]) -> list[HostType]:
     """Check whether each URL is a domain or IP."""
-    return [host_type(url.hostname or url.netloc) for url in urls]
+    return [
+        host_type(url.hostname) if url.hostname else HostType.UNKNOWN for url in urls
+    ]

@@ -16,6 +16,11 @@ class Domain:
     domain_name: str
     tld: str
 
+    @property
+    def host(self) -> str:
+        """Return the host (domain + tld) of the domain."""
+        return f"{self.domain_name}.{self.tld}" if self.tld else self.domain_name
+
 
 def parse_domain(url: Url) -> Domain:
     """Return only the domain of a URL."""
