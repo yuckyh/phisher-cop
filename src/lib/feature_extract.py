@@ -5,14 +5,16 @@ from .document import email_addresses, payload_dom, tokenize_dom
 # from .email_address import parse_email_address
 from .domain import parse_domain
 
-# Regex for IPv4 and IPv6
-IPV4_PATTERN = re.compile(r"^(?:\d{1,3}\.){3}\d{1,3}$")
-IPV6_PATTERN = re.compile(r"^\[?[0-9a-fA-F:]+\]?$")
+IP_ADDRESS_PATTERN = re.compile(
+    r"(^(?:\d{1,3}\.){3}\d{1,3}$)"  # IPv4
+    "|"
+    r"(^\[?[0-9a-fA-F:]+\]?$)"  # IPv6
+)
 
 
 def is_ip_address(host: str) -> bool:
     """Check if the given host string is an IP address (IPv4 or IPv6)."""
-    return bool(IPV4_PATTERN.match(host) or IPV6_PATTERN.match(host))
+    return IP_ADDRESS_PATTERN.match(host) is not None
 
 
 def sender_domain_type(email) -> str:
