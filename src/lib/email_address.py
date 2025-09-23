@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from urllib.parse import urlparse
 
 from .domain import Domain, parse_domain
 
@@ -23,6 +24,7 @@ def parse_email_address(address: str) -> EmailAddress:
     else:
         alias = ""
 
-    domain = parse_domain("http://" + domain_str)
+    url = urlparse("http://" + domain_str)
+    domain = parse_domain(url)
 
     return EmailAddress(username=username, alias=alias, domain=domain)

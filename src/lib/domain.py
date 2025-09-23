@@ -1,9 +1,11 @@
 """Module for parsing URLs into their components."""
 
+import urllib.parse
 from dataclasses import dataclass
-from urllib.parse import urlparse
 
 from tldextract import extract
+
+Url = urllib.parse.ParseResult
 
 
 @dataclass()
@@ -15,10 +17,9 @@ class Domain:
     tld: str
 
 
-def parse_domain(url: str) -> Domain:
-    """Parse a URL string and return only the domain."""
-    url_parts = urlparse(url)
-    domain_parts = extract(url_parts.netloc)
+def parse_domain(url: Url) -> Domain:
+    """Return only the domain of a URL."""
+    domain_parts = extract(url.netloc)
     return Domain(
         subdomain=domain_parts.subdomain,
         domain_name=domain_parts.domain,

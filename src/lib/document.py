@@ -7,6 +7,7 @@ from email.utils import getaddresses
 
 from bs4 import BeautifulSoup, Tag
 
+from .domain import Url
 from .email_address import EmailAddress, parse_email_address
 
 Email = message.Message
@@ -87,13 +88,13 @@ def email_addresses(email: Email) -> list[EmailAddress]:
     return addresses
 
 
-def normalize_url(url: str) -> urllib.parse.ParseResult:
+def normalize_url(url: str) -> Url:
     """Normalizes a URL by lowercasing, unquoting, stripping trailing slashes
     and removing params, query, and fragment."""
     # Lowering must be done before unquoting because capital letters can be percent-encoded
     unquoted_url = urllib.parse.unquote(url.lower())
     parsed_url = urllib.parse.urlparse(unquoted_url)
-    return urllib.parse.ParseResult(
+    return Url(
         scheme=parsed_url.scheme,
         netloc=parsed_url.netloc,
         path=parsed_url.path.rstrip("/"),
@@ -103,7 +104,7 @@ def normalize_url(url: str) -> urllib.parse.ParseResult:
     )
 
 
-def anchor_urls(dom: BeautifulSoup) -> set[urllib.parse.ParseResult]:
+def anchor_urls(dom: BeautifulSoup) -> set[Url]:
     """Returns a set of normalized URLs from the href attributes of anchor tags in the document."""
     return {
         url
@@ -117,7 +118,7 @@ def anchor_urls(dom: BeautifulSoup) -> set[urllib.parse.ParseResult]:
 
 def token_urls(
     raw_tokens: list[str],
-) -> tuple[set[urllib.parse.ParseResult], list[str]]:
+) -> tuple[set[Url], list[str]]:
     """Iterates through `raw_tokens` and returns a set of normalized URLs and a list of non-URL tokens.
     The order of non-URL tokens is preserved."""
     urls = set()
@@ -136,7 +137,7 @@ def raw_dom_tokens(dom: BeautifulSoup) -> list[str]:
     return dom.get_text(separator=" ").split()
 
 
-def tokenize_dom(dom: BeautifulSoup) -> tuple[set[urllib.parse.ParseResult], list[str]]:
+def tokenize_dom(dom: BeautifulSoup) -> tuple[set[Url], list[str]]:
     """Returns a set of normalized URLs and a list of non-URL tokens from the document's text content.
     The order of non-URL tokens is preserved."""
     urls, tokens = token_urls(raw_dom_tokens(dom))
