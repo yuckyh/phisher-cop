@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phisher-Cop</title>
+    
+    <!-- Link to the external CSS file -->
+     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    
+    <!-- Links for Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</head>
+
+
+<body class="background">
+<!-- Main container for the app -->
+    <div class="main-container">
+        
+        <!-- Header and Logo -->
+        <div class="header-logo-container">
+            <!-- PLACEHOLDER IMAGE FOR LOGO!! -->
+            <img src="https://placehold.co/100x100/A0B2C9/FFFFFF?text=Logo" alt="Phisher-Cop-Logo" class="logo-image">
+        </div>
+
+        <!-- Title -->
+        <h1 class="app-title">
+            Email Phishing Detector
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="app-subtitle">
+            Paste the full content of an email below to check if it's a phishing attempt.
+        </p>
+
+        <!-- The main form -->
+        <!-- sends data via POST request to server -->
+        <form method="POST" action="/" class="form-container">
+            <div>
+                <label class="form-label">From <input type="text" name="sender" class="form-input" placeholder="e.g., notascam@gmail.com"></label>                
+            </div>
+            <div>
+                <label class="form-label">To <input type="text" name="recipient" class="form-input" placeholder="e.g., the-scammed@gmail.com"></label>
+            </div>
+            <div>
+                <label class="form-label">CC (optional) <input type="text" name="cc" class="form-input" placeholder="e.g., cc"></label>
+            </div>
+            <div>
+                <label class="form-label">Subject <input type="text" name="subject" class="form-input" placeholder="e.g., Urgent Action Required: Your Account Has Been Locked"></label>                
+            </div>
+            <div>
+                <label class="form-label">Email Body <textarea name="payload" rows="10" class="form-input" placeholder="Paste the full email text here..."></textarea></label>
+            </div>
+            
+            <!-- Submit Button -->
+            <button type="submit" class="submit-button">
+                Check for Phishing
+            </button>
+        </form>
+
+        <!-- jinja template that only renders if result variable exists (i.e != None) -->
+        {% if result %}
+        <!-- Result box -->
+        <div class="result-box {% if result == 'Phishing' %}result-phishing{% else %}result-not-phishing{% endif %}">
+            Result: {{ result }}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
