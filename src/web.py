@@ -1,90 +1,13 @@
 """Entry point for the web server."""
-import re
-import urllib.parse
-from email import message, message_from_string
-from email.utils import getaddresses
-from typing import Literal
 
-from bs4 import BeautifulSoup
 from flask import Flask, render_template_string, request
 
 from lib.document import email_from_input, payload_dom, tokenize_dom, words_from_tokens
 from lib.model import load_model
 
-# The HTML template as a single string
-HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phisher-Cop</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
-</head>
-<body class="bg-gray-900 flex items-center justify-center min-h-screen p-4">
-
-    <!-- Main container for the app -->
-    <div class="bg-dark p-8 rounded-2xl shadow-xl w-full max-w-2xl transform transition-all duration-300">
-        
-        <!-- Header and Logo-->
-        <div class="flex items-center justify-center mb-6">
-            <!-- New Image Tag for your logo -->
-            <img src="https://placehold.co/100x100/A0B2C9/FFFFFF?text=Logo" alt="App Logo" class="w-16 h-16 rounded-full border-2 border-blue-500 p-1">
-        </div>
-
-        <!-- Title -->
-        <h1 class="text-3xl md:text-4xl font-extrabold text-white mb-2 text-center">
-            Email Phishing Detector
-        </h1>
-
-        <!-- Subtitle -->
-        <p class="text-white mb-6 text-center">
-            Paste the full content of an email below to check if it's a phishing attempt.
-        </p>
-
-        <!-- The main form -->
-        <form method="POST" action="/" class="space-y-4">
-            <div>
-                <label for="sender" class="block text-white font-medium mb-1">Sender</label>
-                <input type="text" id="sender" name="sender" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-300" placeholder="e.g., support@amazon.com">
-            </div>
-            <div>
-                <label for="subject" class="block text-white font-medium mb-1">Subject</label>
-                <input type="text" id="subject" name="subject" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-300" placeholder="e.g., Action Required: Your Account Has Been Locked">
-            </div>
-            <div>
-                <label for="payload" class="block text-white font-medium mb-1">Email Body</label>
-                <textarea id="payload" name="payload" rows="10" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-300" placeholder="Paste the full email text here..."></textarea>
-            </div>
-            
-            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50">
-                Check for Phishing
-            </button>
-        </form>
-
-        {% if result %}
-        <!-- Result box -->
-        <div class="mt-6 p-4 rounded-lg text-center font-bold text-white
-                    {% if result == 'Phishing' %}bg-red-500{% else %}bg-green-500{% endif %}">
-            Result: {{ result }}
-        </div>
-        {% endif %}
-    </div>
-
-</body>
-</html>
-"""
-
 # creating Flask app instance
 app = Flask(__name__)
+
 
 # route for the main page
 @app.route("/", methods=["GET", "POST"])
@@ -96,7 +19,9 @@ def index():
         payload = request.form.get("payload", "")
 
         # Use the actual document.py function to create the email object
-        email = email_from_input(sender=sender, recipient="", cc="", subject=subject, payload=payload)
+        email = email_from_input(
+            sender=sender, recipient="", cc="", subject=subject, payload=payload
+        )
 
         # Process the email body to get features for the model
         dom = payload_dom(email)
@@ -115,6 +40,7 @@ def index():
 
     # For GET requests, show the empty form
     return render_template_string(HTML_TEMPLATE, result=None)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
