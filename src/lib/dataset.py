@@ -9,7 +9,7 @@ from typing import TypeAlias
 from . import PROJECT_ROOT
 
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
-DATA_HASH_EXPECTED = "4840f3937d6f6f3fc83bb6c7b1f5ec509ec71124eb6435641396987e9677d317"
+DATA_HASH_EXPECTED = "7f1c2176ecb5b133e086c7a9e617c2e4b86ce50c80d02325029ef47ba36340b0"
 ZIP_PATH = os.path.join(PROJECT_ROOT, "archive.zip")
 ZIP_HASH_EXPECTED = "bfac1859ea48dd2105a6c351e2cf3b3c0c0995c0f9e55b996df6a740b5803a8a"
 
@@ -27,7 +27,7 @@ DataSplit: TypeAlias = tuple[list[str], list[int]]
 def update_hash(hash_func, file_path: str):
     """Update the given hash function with the contents of a file."""
     with open(file_path, "rb") as f:
-        while chunk := f.read(8192):
+        while chunk := f.read(64 * 1024):
             hash_func.update(chunk)
 
 
@@ -45,14 +45,21 @@ def hash_dir(dir_path: str) -> str:
         for file in sorted(files):
             file_path = os.path.join(root, file)
             relative_path = Path(file_path).relative_to(dir_path)
-            hash_func.update(relative_path.as_posix().encode())
-            update_hash(hash_func, file_path)
+
+            sub_hash = hashlib.sha256()
+            sub_hash.update(relative_path.as_posix().encode(encoding="utf-8"))
+            sub_hash.update(b"\0")
+            update_hash(sub_hash, file_path)
+
+            hash_func.update(sub_hash.digest())
     return hash_func.hexdigest()
 
 
 def split_dir(dir_path: str, splits: list[float]) -> list[list[str]]:
     """Split the files in a directory into multiple parts according to the given ratios."""
-    file_paths = [os.path.join(dir_path, filename) for filename in os.listdir(dir_path)]
+    file_paths = sorted(
+        os.path.join(dir_path, filename) for filename in os.listdir(dir_path)
+    )
     random.shuffle(file_paths)
 
     # Normalize splits to sum to 1
