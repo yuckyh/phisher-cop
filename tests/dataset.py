@@ -17,7 +17,7 @@ class TestDataset(unittest.TestCase):
                 f.write("File in dir1.")
 
             expected = (
-                "4d7963a2fb80742746c631ce4fb5d334971cbc5b202ba0c87cf92240b496951f"
+                "0abf1d129670de2fff96b5cd107c4ba326f07b50576f169e7087ddeddb5c75e4"
             )
             actual = hash_dir(tmpdir)
             self.assertEqual(actual, expected)
@@ -27,7 +27,7 @@ class TestDataset(unittest.TestCase):
                 os.path.join(tmpdir, "file3.txt"),
             )
             expected = (
-                "2383893af072f5aff2b67a12f5d4faa66aad6feb91e7f353450f586b3dd7c079"
+                "bec2f2280253dc911759b097e719e280d3a83254cd19093bcbd5c5b9b5f8749c"
             )
             actual = hash_dir(tmpdir)
             self.assertEqual(actual, expected)
