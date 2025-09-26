@@ -79,5 +79,5 @@ def find_suspicious_words(words: Iterable[str]) -> Iterator[int]:
             yield i
 
 
-def score_suspisious_words(indices: Iterable[int]) -> float:
+def score_suspicious_words(indices: Iterable[int]) -> float:
     raise NotImplementedError("TODO: implement scoring function")
