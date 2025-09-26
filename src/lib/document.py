@@ -7,8 +7,8 @@ from email.utils import getaddresses
 
 from bs4 import BeautifulSoup, Tag
 
-from .domain import Url
-from .email_address import EmailAddress, parse_email_address
+from lib.domain import Url
+from lib.email_address import EmailAddress, parse_email_address
 
 Email = message.Message
 

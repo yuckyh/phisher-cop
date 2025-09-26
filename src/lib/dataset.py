@@ -6,8 +6,8 @@ import zipfile
 from pathlib import Path
 from typing import TypeAlias
 
-from . import PROJECT_ROOT
-from .document import Email, email_from_file
+from lib import PROJECT_ROOT
+from lib.document import Email, email_from_file
 
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
 DATA_HASH_EXPECTED = "7f1c2176ecb5b133e086c7a9e617c2e4b86ce50c80d02325029ef47ba36340b0"

@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-from .model import Model
+from lib.model import Model
 
 PROJECT_ROOT = Path(os.path.realpath(__file__)).parent.parent.parent
 MODEL_PATH = os.path.join(PROJECT_ROOT, "model.joblib")

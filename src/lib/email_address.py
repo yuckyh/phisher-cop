@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
-from .domain import Domain, parse_domain
+from lib.domain import Domain, parse_domain
 
 
 @dataclass()
