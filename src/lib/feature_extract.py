@@ -48,28 +48,25 @@ def find_suspicious_words(words: Iterable[str]) -> Iterator[int]:
     Yields:
         Iterator[int]: The index of each suspicious keyword found.
     """
-
-    # TODO: get a longer list
     SUSPICIOUS_KEYWORDS = {
-        "urgent",
-        "hurry",
-        "verify",
-        "account",
-        "action required",
-        "password",
-        "login",
-        "security alert",
-        "suspicious activity",
-        "limited time",
-        "low price",
-        "immediate",
-        "invoice",
-        "payment",
-        "click here",
-        "link",
-        "update",
-        "confirm",
         "free",
+        "please",
+        "send",
+        "address",
+        "information",
+        "order",
+        "email",
+        "report",
+        "make",
+        "business",
+        "money",
+        "receive",
+        "internet",
+        "name",
+        "click",
+        "over",
+        "home",
+        "site",
     }
 
     for i, word in enumerate(words):
