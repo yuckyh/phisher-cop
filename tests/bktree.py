@@ -1,6 +1,6 @@
 import unittest
 
-from lib.bktree import BKTree, levenshtein_distance
+from src.lib.bktree import BKTree, levenshtein_distance
 
 
 class TestLevenshteinDistance(unittest.TestCase):
