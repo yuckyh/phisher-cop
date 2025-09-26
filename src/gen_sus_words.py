@@ -1,5 +1,8 @@
 """Generate the list of suspicious words from the training split."""
 
+import os
+
+from feature_data import BASE_DIR as FEATURE_DATA_DIR
 from lib.dataset import load_data
 from lib.document import payload_dom, tokenize_dom, words_from_tokens
 
@@ -40,7 +43,8 @@ if __name__ == "__main__":
 
     print("ham:", ham)
     print("spam:", spam)
-    print(
-        "Clean set to copy and paste:",
-        {word for word in spam.keys() if len(word) >= 4},
-    )
+
+    sus_words = {word for word in spam.keys() if len(word) >= 4}
+    with open(os.path.join(FEATURE_DATA_DIR, "suspicious_words.txt"), "w") as f:
+        for word in sorted(sus_words):
+            f.write(word + "\n")
