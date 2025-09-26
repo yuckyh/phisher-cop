@@ -1,8 +1,7 @@
-# Just starting out on a coding project for the first time, don't sue me guys ;-;
 
 # The journey of 10,000 lines of code begins with a few libraries...
+
 import re
-import bs4
 from bs4 import BeautifulSoup
 from lib.dataset import load_data
 from lib.document import email_addresses, email_from_file, payload_dom, tokenize_dom, words_from_tokens
@@ -10,13 +9,11 @@ from lib.document import email_addresses, email_from_file, payload_dom, tokenize
 if __name__ == "__main__":
     load_data()
 
-    email = email_from_file("C:\\Users\\thosh\\OneDrive\\Desktop\\email1.txt")
+    email = email_from_file("data/train/spam/0000.txt")
     addresses = email_addresses(email)
     dom = payload_dom(email)
     urls, tokens = tokenize_dom(dom)
     words = words_from_tokens(tokens)
-    # These 3 variables are the inputs to the feature extraction functions
-    # You can leave some of them out if you're not using them
     print(addresses, urls, words)
 
 r'''
@@ -24,8 +21,7 @@ Main objective here:
 Keyword Detection and Scoring
 1. Scan email subject and body for suspicious keywords (e.g., 'urgent', 'verify', 'account')
 2. Assign higher risk scores for suspicious keywords appearing in subject lines or early in the message
-3. Recommended to get the list of suspicious words from a public source online (done)
-4. Should return Dict[str, int], where each key is the suspicious word, and each value is the minimum index of the sus word in the email.
+3. Should return Dict[str, int], where each key is the suspicious word, and each value is the minimum index of the sus word in the email.
 '''
 
 SUSPICIOUS_KEYWORDS = [
@@ -50,6 +46,7 @@ SUSPICIOUS_KEYWORDS = [
     'free'
 ]
 
+# Time to make the actual function
 def score_email_keywords(subject: str, body: str) -> dict[str, tuple[str, int]]:
     """
     Scans the email subject and body for suspicious keywords and returns the minimum index and location of each found keyword.
@@ -67,6 +64,7 @@ def score_email_keywords(subject: str, body: str) -> dict[str, tuple[str, int]]:
     subject_lower = subject.lower()
     body_lower = plain_body.lower()
     sep = " [SEP] "
+    sep_index = len(subject)
     full_text = subject_lower + sep + body_lower
     indices = {}
 
@@ -88,3 +86,5 @@ def score_email_keywords(subject: str, body: str) -> dict[str, tuple[str, int]]:
             indices[keyword] = (location, rel_index)
 
     return indices
+
+score_email_keywords(email)
