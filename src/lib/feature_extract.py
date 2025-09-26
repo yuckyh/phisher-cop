@@ -3,9 +3,14 @@ from ipaddress import ip_address
 
 from typing_extensions import Iterable, Iterator
 
+from feature_data import load_suspicious_words, load_top_domains
+
 from .document import Email
 from .domain import Url
 from .email_address import parse_email_address
+
+SAFE_DOMAINS = load_top_domains()
+SUSPICIOUS_WORDS = load_suspicious_words()
 
 
 class HostType(Enum):
@@ -48,35 +53,14 @@ def find_suspicious_words(words: Iterable[str]) -> Iterator[int]:
     Yields:
         Iterator[int]: The index of each suspicious keyword found.
     """
-    SUSPICIOUS_KEYWORDS = {
-        "free",
-        "please",
-        "send",
-        "address",
-        "information",
-        "order",
-        "email",
-        "report",
-        "make",
-        "business",
-        "money",
-        "receive",
-        "internet",
-        "name",
-        "click",
-        "over",
-        "home",
-        "site",
-    }
-
     for i, word in enumerate(words):
-        if word.lower() in SUSPICIOUS_KEYWORDS:
+        if word.lower() in SUSPICIOUS_WORDS:
             # Use a generator to reduce memory usage,
             # as this list is only used once to calculate a score.
             yield i
 
 
-def _suspicious_word_kernel(x: float) -> float:
+def suspicious_word_kernel(x: float) -> float:
     """A kernel function that gives higher weight to words appearing earlier in the text.
 
     Args:
@@ -95,7 +79,7 @@ def score_suspicious_words(words: list[str]) -> float:
         x = index / end  # Normalize to [0, 1]
         # x is 1 when this is a suspicious word, and 0 otherwise.
         # Since anything multiplied by 0 is 0, we can skip non-suspicious words.
-        y = _suspicious_word_kernel(x)
+        y = suspicious_word_kernel(x)
         # We need to multiply y by the step size 1 / len(words),
         # but it's more efficient to do it once at the end.
         score += y
