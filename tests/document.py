@@ -57,18 +57,18 @@ class TestDocument(unittest.TestCase):
                         "From: Mail Delivery Subsystem <postmaster@example.com>\r"
                         "To: recipient@example.com\r"
                         "Subject: Undelivered Mail Returned to Sender\r"
-                        "<html>\r"
-                        "    <body>\r"
-                        "        <h1>Hello World!</h1>\r"
-                        "        <p>This is a test.</p>\r"
-                        "        <a href='http://example.com'>Example</a>\r"
-                        "    </body>\r"
-                        "</html>\r"
+                        "<html>"
+                        "    <body>"
+                        "        <h1>Hello World!</h1>"
+                        "        <p>This is a test.</p>"
+                        "        <a href='http://example.com'>Example</a>"
+                        "    </body>"
+                        "</html>"
                     )
                 )
             email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
         payload = payload_dom(email)
-        expected_payload = '<html> <body> <h1>Hello World!</h1> <p>This is a test.</p> <a href="http://example.com">Example</a> </body> </html> '
+        expected_payload = '<html> <body> <h1>Hello World!</h1> <p>This is a test.</p> <a href="http://example.com">Example</a> </body></html>'
         self.assertEqual(str(payload), expected_payload)
 
     def test_tokenize_dom(self):
@@ -79,13 +79,13 @@ class TestDocument(unittest.TestCase):
                         "From: Mail Delivery Subsystem <postmaster@example.com>\r"
                         "To: recipient@example.com\r"
                         "Subject: Undelivered Mail Returned to Sender\r"
-                        "<html>\r"
-                        "    <body>\r"
-                        "        <h1>Hello World!</h1>\r"
-                        "        <p>This is a test.</p>\r"
-                        "        <a href='http://example.com'>Example</a>\r"
-                        "    </body>\r"
-                        "</html>\r"
+                        "<html>"
+                        "    <body>"
+                        "        <h1>Hello World!</h1>"
+                        "        <p>This is a test.</p>"
+                        "        <a href='http://example.com'>Example</a>"
+                        "    </body>"
+                        "</html>"
                     )
                 )
             email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
