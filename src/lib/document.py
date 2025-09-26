@@ -152,9 +152,9 @@ NON_ALPHANUMERIC_PATTERN = re.compile(
 
 
 def words_from_tokens(tokens: list[str]) -> list[str]:
-    """Returns all contiguous alphanumeric substrings from the tokens, lowercased."""
+    """Returns all contiguous alphanumeric substrings from the tokens."""
     return [
-        word.lower()
+        word
         for token in tokens
         for word in NON_ALPHANUMERIC_PATTERN.split(token)
         if word
