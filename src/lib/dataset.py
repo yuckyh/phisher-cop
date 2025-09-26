@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import TypeAlias
 
 from . import PROJECT_ROOT
+from .document import Email, email_from_file
 
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
 DATA_HASH_EXPECTED = "7f1c2176ecb5b133e086c7a9e617c2e4b86ce50c80d02325029ef47ba36340b0"
@@ -21,7 +22,7 @@ SPLITS = [
 
 HAM = 0
 SPAM = 1
-DataSplit: TypeAlias = tuple[list[str], list[int]]
+DataSplit: TypeAlias = tuple[list[Email], list[int]]
 
 
 def update_hash(hash_func, file_path: str):
@@ -132,18 +133,17 @@ def restructure_splits(out_dir: str, splits: list[float]):
 
 def load_split(split_dir: str) -> DataSplit:
     """Load a dataset split from disk."""
-    texts = []
-    labels = []
+    emails: list[Email] = []
+    labels: list[int] = []
     dir_labels = (("ham", HAM), ("spam", SPAM))
     for dir, label in [
         (os.path.join(split_dir, dir), label) for dir, label in dir_labels
     ]:
         for filename in os.listdir(dir):
             file_path = os.path.join(dir, filename)
-            with open(file_path, "r", encoding="latin-1") as f:
-                texts.append(f.read())
+            emails.append(email_from_file(file_path))
             labels.append(label)
-    return texts, labels
+    return emails, labels
 
 
 def load_data() -> tuple[DataSplit, DataSplit, DataSplit]:
