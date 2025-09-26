@@ -79,5 +79,27 @@ def find_suspicious_words(words: Iterable[str]) -> Iterator[int]:
             yield i
 
 
-def score_suspicious_words(indices: Iterable[int]) -> float:
-    raise NotImplementedError("TODO: implement scoring function")
+def _suspicious_word_kernel(x: float) -> float:
+    """A kernel function that gives higher weight to words appearing earlier in the text.
+
+    Args:
+        x: A normalized position in the text in the range [0, 1].
+    """
+    # This kernel linearly interpolates between 2 at x=0 and 1 at x=1.
+    assert 0 <= x <= 1
+    return 2 - x
+
+
+def score_suspicious_words(words: list[str]) -> float:
+    end = len(words) - 1
+    score = 0.0
+    # Multiply by the kernel and then integrate to get the score
+    for index in find_suspicious_words(words):
+        x = index / end  # Normalize to [0, 1]
+        # x is 1 when this is a suspicious word, and 0 otherwise.
+        # Since anything multiplied by 0 is 0, we can skip non-suspicious words.
+        y = _suspicious_word_kernel(x)
+        # We need to multiply y by the step size 1 / len(words),
+        # but it's more efficient to do it once at the end.
+        score += y
+    return score / len(words)
