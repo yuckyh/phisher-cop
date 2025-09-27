@@ -158,19 +158,10 @@ def raw_dom_tokens(dom: BeautifulSoup) -> list[str]:
     return dom.get_text(separator=" ").split()
 
 
-def tokenize_dom(dom: BeautifulSoup) -> tuple[set[Url], list[str]]:
-    """Returns a set of normalized URLs and a list of non-URL tokens from the document's text content.
-    The order of non-URL tokens is preserved."""
-    urls, tokens = token_urls(raw_dom_tokens(dom))
-    urls |= anchor_urls(dom)
-    return urls, tokens
-
-
 def domains_from_urls(urls: set[Url]) -> list[Domain]:
     return [parse_domain(url) for url in urls]
 
 
-# TODO: Decide to keep or remove this function, potentially removing tokenize_dom.
 def tokenize_payload(email: Email) -> tuple[set[Url], list[str]]:
     """Returns a set of normalized URLs and a list of non-URL tokens from the email's payload.
     The order of non-URL tokens is preserved."""

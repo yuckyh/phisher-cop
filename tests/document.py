@@ -2,7 +2,7 @@ import os
 import unittest
 from tempfile import TemporaryDirectory
 
-from src.lib.document import email_from_file, payload_dom, raw_payload, tokenize_dom
+from src.lib.document import email_from_file, payload_dom, raw_payload, tokenize_payload
 
 
 class TestDocument(unittest.TestCase):
@@ -65,7 +65,7 @@ class TestDocument(unittest.TestCase):
         expected_payload = '<html> <body> <h1>Hello World!</h1> <p>This is a test.</p> <a href="http://example.com">Example</a> </body></html>'
         self.assertEqual(str(payload), expected_payload)
 
-    def test_tokenize_dom(self):
+    def test_tokenize_payload(self):
         with TemporaryDirectory() as tmpdir:
             with open(os.path.join(tmpdir, "test_mail.txt"), "w") as f:
                 f.write(
@@ -81,8 +81,7 @@ class TestDocument(unittest.TestCase):
                     "</html>"
                 )
             email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
-        dom = payload_dom(email)
-        _, tokens = tokenize_dom(dom)
+        _, tokens = tokenize_payload(email)
         expected_tokens = [
             "Hello",
             "World!",
