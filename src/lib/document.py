@@ -178,12 +178,8 @@ def tokenize_payload(email: Email) -> tuple[set[Url], list[str]]:
     anchor_url_set = set()
 
     if email.get_content_type() == "text/plain":
-        tokens = [
-            token
-            for line in remove_payload_quotes(raw_payload(email)).split("\n")
-            for token in line.split(" ")
-        ]
-    elif email.get_content_type() == "text/html":
+        tokens = [token for token in remove_payload_quotes(raw_payload(email)).split()]
+    else:
         dom_payload = payload_dom(email)
         tokens = raw_dom_tokens(dom_payload)
         anchor_url_set = anchor_urls(dom_payload)
