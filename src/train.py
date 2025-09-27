@@ -4,7 +4,69 @@ import numpy as np
 from numpy.typing import NDArray
 
 from lib import MODEL_PATH
+from lib.dataset import HAM
+from lib.document import Email, payload_dom, tokenize_dom, words_from_tokens
+from lib.domain import Url
+from lib.feature_data import SUSPICIOUS_WORDS
 from lib.model import Model, save_model
+
+FORCE_GENERATE_SUS_WORDS = False
+
+
+def top_n(word_counts: dict[str, int], n: int) -> dict[str, int]:
+    descending = sorted(
+        word_counts.items(),
+        key=lambda kv: kv[1],
+        reverse=True,
+    )
+    return {k: v for k, v in descending[:n]}
+
+
+def generate_suspicious_words(email_words: list[list[str]], labels: list[int]) -> None:
+    print("Generating suspicious keyword list...")
+
+    ham_word_counts = {}
+    spam_word_counts = {}
+    for words, label in zip(email_words, labels):
+        word_counts = ham_word_counts if label == HAM else spam_word_counts
+        for word in words:
+            word = word.lower().strip()
+            if not word or not word.isalpha():
+                continue
+            word_counts[word] = word_counts.get(word, 0) + 1
+
+    # Remove common "ham" words from "spam" words
+    ham = top_n(ham_word_counts, 80)
+    spam = top_n(spam_word_counts, 80)
+    for word in ham.keys():
+        if word in spam:
+            del spam[word]
+
+    sus_words = {word for word in spam.keys() if len(word) >= 4}
+    print(f"Generated {len(sus_words)} suspicious keywords.")
+    with open(SUSPICIOUS_WORDS, "w") as f:
+        for word in sorted(sus_words):
+            f.write(word + "\n")
+
+
+def preprocess_emails(
+    emails: list[Email],
+) -> tuple[
+    list[set[Url]],
+    list[list[str]],
+    list[list[str]],
+]:
+    email_urls = []
+    email_tokens = []
+    email_words = []
+    for email in emails:
+        dom = payload_dom(email)
+        urls, tokens = tokenize_dom(dom)
+        words = words_from_tokens(tokens)
+        email_urls.append(urls)
+        email_tokens.append(tokens)
+        email_words.append(words)
+    return email_urls, email_tokens, email_words
 
 
 def dummy_data(
@@ -24,6 +86,14 @@ if __name__ == "__main__":
 
     rng = np.random.default_rng(1974827191289312837)
     train, val, test = dummy_data(rng, 1000), dummy_data(rng, 200), dummy_data(rng, 200)
+
+    # TODO: Uncomment when using real data
+    # # We can only use the training set to avoid data leakage
+    # train_emails, train_labels = train
+    # train_urls, train_tokens, train_words = preprocess_emails(train_emails)
+    # if FORCE_GENERATE_SUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
+    #     generate_suspicious_words(train_words, train_labels)
+
     ml = Model()
     ml.fit(*train)
     save_model(ml, MODEL_PATH)
