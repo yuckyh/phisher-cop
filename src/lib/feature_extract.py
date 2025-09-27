@@ -1,3 +1,4 @@
+import re
 from ipaddress import ip_address
 
 from typing_extensions import Iterable, Iterator
@@ -109,3 +110,12 @@ def sender_domain_matches_url(email: Email, url_domains: Iterable[Domain]) -> bo
 def count_capital_words(words: list[str]) -> int:
     """Count the number of words in all caps."""
     return sum(1 for word in words if all(c.isupper() for c in word))
+
+
+# Define this outside the function to avoid recompiling the regex on each call.
+MONEY_PATTERN = re.compile(r"[$€£]\d+")
+
+
+def count_money_tokens(tokens: list[str]) -> int:
+    """Count the number of tokens that represent money amounts."""
+    return sum(1 for token in tokens if MONEY_PATTERN.match(token))
