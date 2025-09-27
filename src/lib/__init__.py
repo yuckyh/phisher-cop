@@ -10,10 +10,9 @@ MODEL_PATH = os.path.join(PROJECT_ROOT, "model.joblib")
 
 
 class PhisherCop:
-    model: Model
-
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, typosquat_treshold: int):
         self.model = model
+        self.typosquat_treshold = typosquat_treshold
 
     def score_email(self, email: str) -> float:
         raise Exception("TODO: Not implemented")
