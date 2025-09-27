@@ -102,6 +102,8 @@ def count_ip_addresses(urls: Iterable[Url]) -> int:
 def sender_domain_matches_url(email: Email, url_domains: Iterable[Domain]) -> bool:
     """Check if the sender's domain matches any of the given URL domains."""
     sender = parse_email_address(email["Sender"])
+    if sender is None:
+        return False
     for domain in url_domains:
         if sender.domain.host == domain.host:
             return True
