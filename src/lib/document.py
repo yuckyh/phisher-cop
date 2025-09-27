@@ -52,12 +52,26 @@ def decode_payload(email: Email) -> str:
         return ""
     if isinstance(payload, bytes):
         # The payload is in some form of bytes, decode it using the email's charset
+        content_charset = (
+            (email.get_content_charset() or "utf-8")
+            .removesuffix("_charset")
+            .replace("chinesebig5", "big5")
+            .replace("default", "utf-8")
+        )
         return payload.decode(
-            encoding=email.get_content_charset() or "utf-8", errors="replace"
+            encoding=content_charset,
+            errors="replace",
         )
     if isinstance(payload, str):
         return payload
     return str(payload)
+
+
+def remove_payload_quotes(payload: str) -> str:
+    """Removes common quoting prefixes from email payloads."""
+    # This is a very naive implementation and may not cover all cases.
+    # It only removes '>' characters at the start of lines.
+    return "\n".join(line.lstrip("> ") for line in payload.splitlines())
 
 
 def raw_payload(email: Email) -> str:
@@ -74,7 +88,7 @@ def raw_payload(email: Email) -> str:
 
 def payload_dom(email: Email) -> BeautifulSoup:
     # payload is HTML or plain text, but plain text is a subset of HTML
-    payload = raw_payload(email)
+    payload = remove_payload_quotes(raw_payload(email))
     return BeautifulSoup(payload, features="lxml")
 
 
@@ -153,6 +167,33 @@ def tokenize_dom(dom: BeautifulSoup) -> tuple[set[Url], list[str]]:
 
 def domains_from_urls(urls: set[Url]) -> list[Domain]:
     return [parse_domain(url) for url in urls]
+
+# TODO: Decide to keep or remove this function, potentially removing tokenize_dom.
+def tokenize_payload(email: Email) -> tuple[set[Url], list[str]]:
+    """Returns a set of normalized URLs and a list of non-URL tokens from the email's payload.
+    The order of non-URL tokens is preserved."""
+
+    tokens: list[str] = []
+    anchor_url_set = set()
+
+    if email.get_content_type() == "text/plain":
+        tokens = [
+            token
+            for line in remove_payload_quotes(raw_payload(email)).split("\n")
+            for token in line.split(" ")
+        ]
+    elif email.get_content_type() == "text/html":
+        dom_payload = payload_dom(email)
+        tokens = raw_dom_tokens(dom_payload)
+        anchor_url_set = anchor_urls(dom_payload)
+
+    for token in tokens:
+        if not isinstance(token, str):
+            raise ValueError("Token is not a string: " + repr(token))
+    urls, non_url_tokens = token_urls(tokens)
+    urls |= anchor_url_set
+
+    return urls, non_url_tokens
 
 
 NON_ALPHANUMERIC_PATTERN = re.compile(
