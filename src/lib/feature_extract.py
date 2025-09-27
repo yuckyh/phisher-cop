@@ -104,3 +104,8 @@ def sender_domain_matches_url(email: Email, url_domains: Iterable[Domain]) -> bo
         if sender.domain.host == domain.host:
             return True
     return False
+
+
+def count_capital_words(words: list[str]) -> int:
+    """Count the number of words in all caps."""
+    return sum(1 for word in words if all(c.isupper() for c in word))
