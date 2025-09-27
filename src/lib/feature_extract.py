@@ -103,10 +103,16 @@ def count_ip_addresses(urls: Iterable[Url]) -> int:
     return sum(1 for url in urls if is_ip_address(url))
 
 
-def sender_domain_matches_url(email: Email, url_domains: Iterable[Domain]) -> bool:
+def sender_domain_matches_url(email: Email, url_domains: list[Domain]) -> bool:
     """Check if the sender's domain matches any of the given URL domains."""
     if email["From"] is None:
+        # If we can't find the sender, there's something wrong with this email,
+        # so we return False to mark it as suspicious.
         return False
+    if len(url_domains) == 0:
+        # If there are no URLs, we cannot match the sender's domain to any URL domain,
+        # but we return True to mark it as safe as phishing emails usually contain URLs.
+        return True
     sender = parse_email_address(email["From"])
     for domain in url_domains:
         if sender.domain.host == domain.host:
