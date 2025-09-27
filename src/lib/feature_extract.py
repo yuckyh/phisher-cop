@@ -21,13 +21,18 @@ class HostType(Enum):
 
 
 def count_whitelisted_addresses(emails: Iterable[EmailAddress]) -> int:
+    """Count how many email addresses are from a whitelisted domain.
+
+    Time complexity: `O(n)` where `n` is the number of email addresses.
+    Space complexity: `O(1)`.
+    """
     return sum(1 for email in emails if email.domain.host in SAFE_DOMAINS)
 
 
 def host_type(host: str) -> HostType:
     """Return the type of the given host string (IP address or domain)."""
     try:
-        ip_address(host)
+        _ = ip_address(host)
         return HostType.IP
     except ValueError:
         return HostType.DOMAIN
@@ -51,6 +56,9 @@ def url_types(urls: Iterable[Url]) -> list[HostType]:
 def find_suspicious_words(words: Iterable[str]) -> Iterator[int]:
     """
     Scans the `words` for suspicious keywords and returns the index of each keyword found.
+
+    Time complexity: `O(n)` where `n` is the number of words.
+    Space complexity: `O(1)`.
 
     Args:
         words (Iterable[str]): The words to scan.
@@ -77,6 +85,8 @@ def suspicious_word_kernel(x: float) -> float:
 
 
 def score_suspicious_words(words: list[str]) -> float:
+    """Score the suspicious words in the given list of words.
+    Higher scores are given to suspicious words that appear earlier in the list."""
     end = max(1, len(words) - 1)
     score = 0.0
     # Multiply y by the kernel and then integrate to get the score
