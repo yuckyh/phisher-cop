@@ -147,7 +147,7 @@ def tokenize_dom(dom: BeautifulSoup) -> tuple[set[Url], list[str]]:
     return urls, tokens
 
 
-def domains_from_urls(urls: set[urllib.parse.ParseResult]) -> list[Domain]:
+def domains_from_urls(urls: set[Url]) -> list[Domain]:
     return [parse_domain(url) for url in urls]
 
 
