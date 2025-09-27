@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 
 from lib import MODEL_PATH
 from lib.dataset import HAM
-from lib.document import Email, payload_dom, tokenize_dom, words_from_tokens
+from lib.document import Email, tokenize_payload, words_from_tokens
 from lib.domain import Url
 from lib.feature_data import SUSPICIOUS_WORDS
 from lib.model import Model, save_model
@@ -60,8 +60,7 @@ def preprocess_emails(
     email_tokens = []
     email_words = []
     for email in emails:
-        dom = payload_dom(email)
-        urls, tokens = tokenize_dom(dom)
+        urls, tokens = tokenize_payload(email)
         words = words_from_tokens(tokens)
         email_urls.append(urls)
         email_tokens.append(tokens)
