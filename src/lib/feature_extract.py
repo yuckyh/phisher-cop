@@ -57,7 +57,8 @@ def suspicious_word_kernel(x: float) -> float:
 
 def score_suspicious_words(words: list[str]) -> float:
     """Score the suspicious words in the given list of words.
-    Higher scores are given to suspicious words that appear earlier in the list."""
+    Higher scores are given to suspicious words that appear earlier in the list.
+    This score is normalized so that the length of the list does not affect it."""
     end = max(1, len(words) - 1)
     score = 0.0
     # Multiply y by the kernel and then integrate to get the score
@@ -69,6 +70,7 @@ def score_suspicious_words(words: list[str]) -> float:
         # We need to multiply y by the step size 1 / len(words),
         # but it's more efficient to do it once at the end.
         score += y
+    # Multiply by the step size 1 / len(words), but avoid division by zero.
     return score / max(1, len(words))
 
 
@@ -112,15 +114,19 @@ def sender_domain_matches_url(email: Email, url_domains: Iterable[Domain]) -> bo
     return False
 
 
-def count_capital_words(words: list[str]) -> int:
-    """Count the number of words in all caps."""
-    return sum(1 for word in words if all(c.isupper() for c in word))
+def capital_words_ratio(words: list[str]) -> float:
+    """Returns the ratio of words in all caps to those that are not."""
+    return sum(1 for word in words if all(c.isupper() for c in word)) / max(
+        1, len(words)
+    )
 
 
 # Define this outside the function to avoid recompiling the regex on each call.
 MONEY_PATTERN = re.compile(r"[$€£]\d+")
 
 
-def count_money_tokens(tokens: list[str]) -> int:
-    """Count the number of tokens that represent money amounts."""
-    return sum(1 for token in tokens if MONEY_PATTERN.match(token))
+def money_tokens_ratio(tokens: list[str]) -> float:
+    """Returns the ratio of tokens that represent money amounts to those that do not."""
+    return sum(1 for token in tokens if MONEY_PATTERN.match(token)) / max(
+        1, len(tokens)
+    )
