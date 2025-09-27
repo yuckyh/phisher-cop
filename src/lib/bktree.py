@@ -56,10 +56,10 @@ class BKTree:
     def contains_max_distance(self, item: str, max_distance: int) -> bool:
         """Check if the tree contains an item with distance at most `max_distance` from `item`.
 
-        Time complexity: `O(log(n) * O(distance_fn))` on average, `O(n * O(distance_fn))` in the worst case.
+        Time complexity: `O(log(n) * T_d)` on average, `O(n * T_d)` in the worst case.
         Space complexity: `O(log(n))` on average, `O(n)` in the worst case.
 
-        Where `n` is the number of items in the tree."""
+        Where `n` is the number of items in the tree and `T_d` is the time complexity of `distance_fn`."""
         assert max_distance >= 0
         if self.root is None:
             return False
