@@ -74,14 +74,14 @@ def score_suspicious_words(words: list[str]) -> float:
 
 def count_typosquatted_domains(
     domains: Iterable[Domain],
-    edit_treshold: int,
+    edit_threshold: int,
 ) -> int:
     """Count the number of domains that are likely typosquatted versions of popular domains."""
     return sum(
         1
         for domain in domains
         if domain.host not in SAFE_DOMAINS
-        and SAFE_DOMAIN_TREE.contains_max_distance(domain.host, edit_treshold)
+        and SAFE_DOMAIN_TREE.contains_max_distance(domain.host, edit_threshold)
     )
 
 
