@@ -1,4 +1,3 @@
-from enum import Enum
 from ipaddress import ip_address
 
 from typing_extensions import Iterable, Iterator
@@ -14,12 +13,6 @@ SAFE_DOMAIN_TREE = BKTree(levenshtein_distance, SAFE_DOMAINS)
 SUSPICIOUS_WORDS = load_suspicious_words()
 
 
-class HostType(Enum):
-    IP = 0
-    DOMAIN = 1
-    UNKNOWN = 2
-
-
 def count_whitelisted_addresses(emails: Iterable[EmailAddress]) -> int:
     """Count how many email addresses are from a whitelisted domain.
 
@@ -27,30 +20,6 @@ def count_whitelisted_addresses(emails: Iterable[EmailAddress]) -> int:
     Space complexity: `O(1)`.
     """
     return sum(1 for email in emails if email.domain.host in SAFE_DOMAINS)
-
-
-def host_type(host: str) -> HostType:
-    """Return the type of the given host string (IP address or domain)."""
-    try:
-        _ = ip_address(host)
-        return HostType.IP
-    except ValueError:
-        return HostType.DOMAIN
-
-
-def sender_domain_type(email: Email) -> HostType:
-    """Check if the sender's domain is a normal domain or an IP."""
-    sender = parse_email_address(email["Sender"])
-    if not sender:
-        return HostType.UNKNOWN
-    return host_type(sender.domain.host)
-
-
-def url_types(urls: Iterable[Url]) -> list[HostType]:
-    """Check whether each URL is a domain or IP."""
-    return [
-        host_type(url.hostname) if url.hostname else HostType.UNKNOWN for url in urls
-    ]
 
 
 def find_suspicious_words(words: Iterable[str]) -> Iterator[int]:
@@ -112,3 +81,26 @@ def count_typosquatted_domains(
         if domain.host not in SAFE_DOMAINS
         and SAFE_DOMAIN_TREE.contains_max_distance(domain.host, edit_treshold)
     )
+
+
+def is_ip_address(url: Url) -> bool:
+    """Return whether the URL's netloc is an IP address."""
+    try:
+        _ = ip_address(url.netloc)
+        return True
+    except ValueError:
+        return False
+
+
+def count_ip_addresses(urls: Iterable[Url]) -> int:
+    """Count the number of URLs that are IP addresses."""
+    return sum(1 for url in urls if is_ip_address(url))
+
+
+def sender_domain_matches_url(email: Email, url_domains: Iterable[Domain]) -> bool:
+    """Check if the sender's domain matches any of the given URL domains."""
+    sender = parse_email_address(email["Sender"])
+    for domain in url_domains:
+        if sender.domain.host == domain.host:
+            return True
+    return False
