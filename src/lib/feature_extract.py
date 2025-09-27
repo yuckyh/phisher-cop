@@ -71,7 +71,7 @@ def suspicious_word_kernel(x: float) -> float:
 
 
 def score_suspicious_words(words: list[str]) -> float:
-    end = len(words) - 1
+    end = max(1, len(words) - 1)
     score = 0.0
     # Multiply by the kernel and then integrate to get the score
     for index in find_suspicious_words(words):
@@ -82,4 +82,4 @@ def score_suspicious_words(words: list[str]) -> float:
         # We need to multiply y by the step size 1 / len(words),
         # but it's more efficient to do it once at the end.
         score += y
-    return score / len(words)
+    return score / max(1, len(words))
