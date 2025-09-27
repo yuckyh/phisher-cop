@@ -9,6 +9,7 @@ from lib.domain import Domain, Url
 from lib.email_address import EmailAddress, parse_email_address
 from lib.feature_data import load_suspicious_words, load_top_domains
 
+# Define these outside the functions to avoid reloading the data on each call.
 SAFE_DOMAINS = load_top_domains()
 SAFE_DOMAIN_TREE = BKTree(levenshtein_distance, SAFE_DOMAINS)
 SUSPICIOUS_WORDS = load_suspicious_words()
