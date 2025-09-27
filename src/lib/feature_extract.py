@@ -3,10 +3,10 @@ from ipaddress import ip_address
 
 from typing_extensions import Iterable, Iterator
 
-from feature_data import load_suspicious_words, load_top_domains
 from lib.document import Email
 from lib.domain import Url
 from lib.email_address import parse_email_address
+from lib.feature_data import load_suspicious_words, load_top_domains
 
 SAFE_DOMAINS = load_top_domains()
 SUSPICIOUS_WORDS = load_suspicious_words()
