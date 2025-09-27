@@ -193,6 +193,7 @@ NON_ALPHANUMERIC_PATTERN = re.compile(
 
 def words_from_tokens(tokens: list[str]) -> list[str]:
     """Returns all contiguous alphanumeric substrings from the tokens."""
+    # Do NOT lowercase the words as some features are case-sensitive
     return [
         word
         for token in tokens
