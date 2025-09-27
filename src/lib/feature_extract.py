@@ -87,8 +87,10 @@ def count_typosquatted_domains(
 
 def is_ip_address(url: Url) -> bool:
     """Return whether the URL's netloc is an IP address."""
+    if url.hostname is None:
+        return False
     try:
-        _ = ip_address(url.netloc)
+        _ = ip_address(url.hostname)
         return True
     except ValueError:
         return False
