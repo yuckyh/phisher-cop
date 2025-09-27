@@ -5,7 +5,7 @@ from typing_extensions import Iterable, Iterator
 
 from lib.document import Email
 from lib.domain import Url
-from lib.email_address import parse_email_address
+from lib.email_address import EmailAddress, parse_email_address
 from lib.feature_data import load_suspicious_words, load_top_domains
 
 SAFE_DOMAINS = load_top_domains()
@@ -16,6 +16,10 @@ class HostType(Enum):
     IP = 0
     DOMAIN = 1
     UNKNOWN = 2
+
+
+def count_whitelisted_addresses(emails: Iterable[EmailAddress]) -> int:
+    return sum(1 for email in emails if email.domain.host in SAFE_DOMAINS)
 
 
 def host_type(host: str) -> HostType:
