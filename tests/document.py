@@ -10,16 +10,14 @@ class TestDocument(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             with open(os.path.join(tmpdir, "test_mail.txt"), "w") as f:
                 f.write(
-                    (
-                        "From: Mail Delivery Subsystem <postmaster@example.com>\r"
-                        "To: recipient@example.com\r"
-                        "Content-Type: text/plain; charset=latin-1\r"
-                        "Subject: Undelivered Mail Returned to Sender\r"
-                        "\r"
-                        "This is the mail system at host example.com. I’m sorry to have to inform you that your message could not be delivered to one or more recipients. It’s attached below.\r"
-                        "\r"
-                        "--- Original message ---\r"
-                    )
+                    "From: Mail Delivery Subsystem <postmaster@example.com>\r"
+                    "To: recipient@example.com\r"
+                    "Content-Type: text/plain; charset=latin-1\r"
+                    "Subject: Undelivered Mail Returned to Sender\r"
+                    "\r"
+                    "This is the mail system at host example.com. I’m sorry to have to inform you that your message could not be delivered to one or more recipients. It’s attached below.\r"
+                    "\r"
+                    "--- Original message ---\r"
                 )
             email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
         self.assertEqual(email.get_content_type(), "text/plain")
@@ -35,13 +33,11 @@ class TestDocument(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             with open(os.path.join(tmpdir, "test_mail.txt"), "w") as f:
                 f.write(
-                    (
-                        "From: Mail Delivery Subsystem <postmaster@example.com>\r"
-                        "To: recipient@example.com\r"
-                        "Subject: Undelivered Mail Returned to Sender\r"
-                        "This is the mail system at host example.com. Im sorry to have to inform you that your message could not be delivered to one or more recipients. Its attached below.\r"
-                        "--- Original message ---\r"
-                    )
+                    "From: Mail Delivery Subsystem <postmaster@example.com>\r"
+                    "To: recipient@example.com\r"
+                    "Subject: Undelivered Mail Returned to Sender\r"
+                    "This is the mail system at host example.com. Im sorry to have to inform you that your message could not be delivered to one or more recipients. Its attached below.\r"
+                    "--- Original message ---\r"
                 )
             email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
         payload = raw_payload(email)
@@ -53,18 +49,16 @@ class TestDocument(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             with open(os.path.join(tmpdir, "test_mail.txt"), "w") as f:
                 f.write(
-                    (
-                        "From: Mail Delivery Subsystem <postmaster@example.com>\r"
-                        "To: recipient@example.com\r"
-                        "Subject: Undelivered Mail Returned to Sender\r"
-                        "<html>"
-                        "    <body>"
-                        "        <h1>Hello World!</h1>"
-                        "        <p>This is a test.</p>"
-                        "        <a href='http://example.com'>Example</a>"
-                        "    </body>"
-                        "</html>"
-                    )
+                    "From: Mail Delivery Subsystem <postmaster@example.com>\r"
+                    "To: recipient@example.com\r"
+                    "Subject: Undelivered Mail Returned to Sender\r"
+                    "<html>"
+                    "    <body>"
+                    "        <h1>Hello World!</h1>"
+                    "        <p>This is a test.</p>"
+                    "        <a href='http://example.com'>Example</a>"
+                    "    </body>"
+                    "</html>"
                 )
             email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
         payload = payload_dom(email)
@@ -75,18 +69,16 @@ class TestDocument(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             with open(os.path.join(tmpdir, "test_mail.txt"), "w") as f:
                 f.write(
-                    (
-                        "From: Mail Delivery Subsystem <postmaster@example.com>\r"
-                        "To: recipient@example.com\r"
-                        "Subject: Undelivered Mail Returned to Sender\r"
-                        "<html>"
-                        "    <body>"
-                        "        <h1>Hello World!</h1>"
-                        "        <p>This is a test.</p>"
-                        "        <a href='http://example.com'>Example</a>"
-                        "    </body>"
-                        "</html>"
-                    )
+                    "From: Mail Delivery Subsystem <postmaster@example.com>\r"
+                    "To: recipient@example.com\r"
+                    "Subject: Undelivered Mail Returned to Sender\r"
+                    "<html>"
+                    "    <body>"
+                    "        <h1>Hello World!</h1>"
+                    "        <p>This is a test.</p>"
+                    "        <a href='http://example.com'>Example</a>"
+                    "    </body>"
+                    "</html>"
                 )
             email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
         dom = payload_dom(email)
