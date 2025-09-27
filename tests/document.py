@@ -14,7 +14,6 @@ class TestDocument(unittest.TestCase):
                     "To: recipient@example.com\r"
                     "Content-Type: text/plain; charset=latin-1\r"
                     "Subject: Undelivered Mail Returned to Sender\r"
-                    "Content-Type: text/plain; charset=latin-1\r"
                     "\r"
                     "This is the mail system at host example.com. I’m sorry to have to inform you that your message could not be delivered to one or more recipients. It’s attached below.\r"
                     "\r"
