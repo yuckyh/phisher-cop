@@ -64,7 +64,11 @@ def raw_payload(email: Email) -> str:
     if not email.is_multipart():
         return decode_payload(email)
 
-    parts = [decode_payload(part) for part in email.walk()]
+    parts = [
+        decode_payload(part)
+        for part in email.walk()
+        if part.get_content_type() in ("text/plain", "text/html")
+    ]
     return "\n".join(parts)
 
 
