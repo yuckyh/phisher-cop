@@ -112,6 +112,7 @@ def normalize_url(url: str) -> Url:
     """Normalizes a URL by lowercasing, unquoting, stripping trailing slashes
     and removing params, query, and fragment."""
     # Lowering must be done before unquoting because capital letters can be percent-encoded
+    # Lowering must be done for correct string matching during feature extraction
     unquoted_url = urllib.parse.unquote(url.lower())
     parsed_url = urllib.parse.urlparse(unquoted_url)
     return Url(

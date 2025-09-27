@@ -60,6 +60,7 @@ class BKTree:
         Space complexity: `O(log(n))` on average, `O(n)` in the worst case.
 
         Where `n` is the number of items in the tree."""
+        assert max_distance >= 0
         if self.root is None:
             return False
 

@@ -3,12 +3,14 @@ from ipaddress import ip_address
 
 from typing_extensions import Iterable, Iterator
 
+from lib.bktree import BKTree, levenshtein_distance
 from lib.document import Email
-from lib.domain import Url
+from lib.domain import Domain, Url
 from lib.email_address import EmailAddress, parse_email_address
 from lib.feature_data import load_suspicious_words, load_top_domains
 
 SAFE_DOMAINS = load_top_domains()
+SAFE_DOMAIN_TREE = BKTree(levenshtein_distance, SAFE_DOMAINS)
 SUSPICIOUS_WORDS = load_suspicious_words()
 
 
@@ -87,3 +89,16 @@ def score_suspicious_words(words: list[str]) -> float:
         # but it's more efficient to do it once at the end.
         score += y
     return score / max(1, len(words))
+
+
+def count_typosquatted_domains(
+    domains: Iterable[Domain],
+    edit_treshold: int,
+) -> int:
+    """Count the number of domains that are likely typosquatted versions of popular domains."""
+    return sum(
+        1
+        for domain in domains
+        if domain.host not in SAFE_DOMAINS
+        and SAFE_DOMAIN_TREE.contains_max_distance(domain.host, edit_treshold)
+    )
