@@ -92,7 +92,7 @@ def payload_dom(email: Email) -> BeautifulSoup:
     return BeautifulSoup(payload, features="lxml")
 
 
-def email_addresses(email: Email) -> list[EmailAddress]:
+def get_email_addresses(email: Email) -> list[EmailAddress]:
     addresses = []
     values = [
         value

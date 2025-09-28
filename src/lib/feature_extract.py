@@ -4,9 +4,8 @@ from ipaddress import ip_address
 from typing_extensions import Iterable, Iterator
 
 from lib.bktree import BKTree, levenshtein_distance
-from lib.document import Email
 from lib.domain import Domain, Url
-from lib.email_address import EmailAddress, parse_email_address
+from lib.email_address import EmailAddress
 from lib.feature_data import load_suspicious_words, load_top_domains
 
 # Define these outside the functions to avoid reloading the data on each call.
@@ -103,9 +102,10 @@ def count_ip_addresses(urls: Iterable[Url]) -> int:
     return sum(1 for url in urls if is_ip_address(url))
 
 
-def sender_domain_matches_url(email: Email, url_domains: list[Domain]) -> bool:
+# def sender_domain_matches_url(email: Email, url_domains: list[Domain]) -> bool:
+def email_domain_matches_url(email_address: EmailAddress, url_domains: list[Domain]) -> bool:
     """Check if the sender's domain matches any of the given URL domains."""
-    if email["From"] is None:
+    if email_address is None:
         # If we can't find the sender, there's something wrong with this email,
         # so we return False to mark it as suspicious.
         return False
@@ -113,9 +113,8 @@ def sender_domain_matches_url(email: Email, url_domains: list[Domain]) -> bool:
         # If there are no URLs, we cannot match the sender's domain to any URL domain,
         # but we return True to mark it as safe as phishing emails usually contain URLs.
         return True
-    sender = parse_email_address(email["From"])
     for domain in url_domains:
-        if sender.domain.host == domain.host:
+        if email_address.domain.host == domain.host:
             return True
     return False
 
