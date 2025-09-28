@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from tldextract import extract
 
 Url = urllib.parse.ParseResult
+"""A parsed URL in lowercase."""
 
 
 @dataclass()
