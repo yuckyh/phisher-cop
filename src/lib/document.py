@@ -4,6 +4,7 @@ import re
 import urllib.parse
 from email import message, message_from_bytes
 from email.utils import getaddresses
+from typing import TypedDict
 
 from bs4 import BeautifulSoup, Tag
 
@@ -12,6 +13,15 @@ from lib.email_address import EmailAddress, parse_email_address
 
 Email = message.Message
 
+
+class PreprocessedEmail(TypedDict):
+    urls: set[Url]
+    tokens: list[str]
+    words: list[str]
+    sender: EmailAddress
+    addresses: list[EmailAddress]
+    domains: list[Domain]
+    email: Email
 
 # TODO: reconsider this to be file upload specific
 # e.g. different preprocessing logic for web input vs. file input
@@ -23,9 +33,9 @@ def email_from_file(path: str) -> Email:
 def email_from_input(
     sender: str,
     recipient: str,
-    cc: list[str] | None,
     subject: str,
     payload: str,
+    cc: list[str] | None = None,
 ) -> Email:
     if not sender or not recipient or not subject or not payload:
         raise ValueError(
