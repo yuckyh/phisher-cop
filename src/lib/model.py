@@ -54,8 +54,9 @@ def build_pipeline() -> Pipeline:
             ("transformer", column_transformers),
             ("scaler", StandardScaler()),
             # ("model", LinearSVC()),
-            ("model", SGDClassifier())
-        ], verbose = True
+            ("model", SGDClassifier()),
+        ],
+        verbose=True,
     )
     return pipeline
 
