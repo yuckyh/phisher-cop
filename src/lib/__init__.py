@@ -50,9 +50,7 @@ class PhisherCop:
             "email": email,
         }
 
-    def extract_features(
-        self, email: PreprocessedEmail
-    ) -> list[float | str]:
+    def extract_features(self, email: PreprocessedEmail) -> list[float | str]:
         from .feature_extract import (
             capital_words_ratio,
             count_ip_addresses,

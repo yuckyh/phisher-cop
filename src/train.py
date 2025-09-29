@@ -64,6 +64,7 @@ def extract_features(X: list[PreprocessedEmail]) -> list[list[float | str]]:
     feature_vectors = [PhisherCop().extract_features(email) for email in X]
     return feature_vectors
 
+
 def dummy_data(
     rng: np.random.Generator, rows: int
 ) -> tuple[np.typing.NDArray[np.float64], np.typing.NDArray[np.int8]]:

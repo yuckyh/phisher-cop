@@ -18,7 +18,9 @@ def parse_email_address(address: str) -> EmailAddress:
     parsed_address = address.split("<")[-1].split(">")[0] if "<" in address else address
 
     if not parsed_address:
-        return EmailAddress(username="", alias="", domain=Domain(subdomain="", domain_name="", tld=""))
+        return EmailAddress(
+            username="", alias="", domain=Domain(subdomain="", domain_name="", tld="")
+        )
 
     if "@" not in parsed_address:
         raise ValueError(f"Invalid email address: {parsed_address}, missing '@'")

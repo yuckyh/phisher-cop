@@ -23,6 +23,7 @@ class PreprocessedEmail(TypedDict):
     domains: list[Domain]
     email: Email
 
+
 # TODO: reconsider this to be file upload specific
 # e.g. different preprocessing logic for web input vs. file input
 def email_from_file(path: str) -> Email:
