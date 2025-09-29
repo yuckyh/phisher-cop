@@ -7,7 +7,7 @@ from typing import Callable, Iterable, TypeVar, cast
 from joblib import Parallel, delayed
 
 from lib.document import Email, PreprocessedEmail
-from lib.domain import Domain
+from lib.feature_extract import count_typosquatted_domains
 
 PROJECT_ROOT = Path(os.path.realpath(__file__)).parents[2]
 MODEL_PATH = os.path.join(PROJECT_ROOT, "model.joblib")
@@ -50,7 +50,9 @@ class PhisherCop:
             "email": email,
         }
 
-    def extract_features(self, email: PreprocessedEmail) -> list[float | str | list[Domain]]:  # noqa: F821
+    def extract_features(
+        self, email: PreprocessedEmail
+    ) -> list[float | str]:
         from .feature_extract import (
             capital_words_ratio,
             count_ip_addresses,
@@ -60,18 +62,20 @@ class PhisherCop:
             score_suspicious_words,
         )
 
-        urls = email["urls"]
-        tokens = email["tokens"]
-        words = email["words"]
-        sender = email["sender"]
-        addresses = email["addresses"]
-        domains = email["domains"]
+        urls, tokens, words, sender, addresses, domains = (
+            email["urls"],
+            email["tokens"],
+            email["words"],
+            email["sender"],
+            email["addresses"],
+            email["domains"],
+        )
 
         return [
             " ".join(words),
             count_whitelisted_addresses(addresses),
             score_suspicious_words(words),
-            domains,
+            count_typosquatted_domains(domains, edit_threshold=1),
             count_ip_addresses(urls),
             email_domain_matches_url(sender, domains),
             capital_words_ratio(words),
