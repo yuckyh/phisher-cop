@@ -1,14 +1,18 @@
 """Entry point for the model training script."""
 
-import numpy as np
-from numpy.typing import NDArray
+import os
 
-from lib import MODEL_PATH
-from lib.dataset import HAM
-from lib.document import Email, tokenize_payload, words_from_tokens
-from lib.domain import Url
+import numpy as np
+from sklearn.metrics import confusion_matrix, f1_score  # noqa
+
+from lib import MODEL_PATH, PhisherCop, parallelize
+from lib.dataset import HAM, load_data
+from lib.document import (
+    Email,
+    PreprocessedEmail,
+)
 from lib.feature_data import SUSPICIOUS_WORDS
-from lib.model import Model, save_model
+from lib.model import load_model, save_model
 
 FORCE_GENERATE_SUS_WORDS = False
 
@@ -51,26 +55,18 @@ def generate_suspicious_words(email_words: list[list[str]], labels: list[int]) -
 
 def preprocess_emails(
     emails: list[Email],
-) -> tuple[
-    list[set[Url]],
-    list[list[str]],
-    list[list[str]],
-]:
-    email_urls = []
-    email_tokens = []
-    email_words = []
-    for email in emails:
-        urls, tokens = tokenize_payload(email)
-        words = words_from_tokens(tokens)
-        email_urls.append(urls)
-        email_tokens.append(tokens)
-        email_words.append(words)
-    return email_urls, email_tokens, email_words
+) -> list[PreprocessedEmail]:
+    preprocessed_emails = parallelize(PhisherCop().preprocess_email, emails)
+    return preprocessed_emails
 
+
+def extract_features(X: list[PreprocessedEmail]) -> list[list[float | str]]:
+    feature_vectors = [PhisherCop().extract_features(email) for email in X]
+    return feature_vectors
 
 def dummy_data(
     rng: np.random.Generator, rows: int
-) -> tuple[NDArray[np.float64], NDArray[np.int64]]:
+) -> tuple[np.typing.NDArray[np.float64], np.typing.NDArray[np.int8]]:
     features = rng.standard_normal((rows, 10))
     labels = features.sum(axis=1) > 0
     labels = labels.astype(np.int64)
@@ -78,24 +74,30 @@ def dummy_data(
 
 
 if __name__ == "__main__":
-    # TODO: use real data instead of dummy data
-    # train, val, test = load_data()
-    # for split, name in zip((train, val, test), ("Train", "Validation", "Test")):
-    #     print(f"{name} set: {len(split[0])} samples")
+    train, val, test = load_data()
+    for split, name in zip((train, val, test), ("Train", "Validation", "Test")):
+        print(f"{name} set: {len(split[0])} samples")
 
-    rng = np.random.default_rng(1974827191289312837)
-    train, val, test = dummy_data(rng, 1000), dummy_data(rng, 200), dummy_data(rng, 200)
+    train, val, test = ((preprocess_emails(X), y) for X, y in (train, val, test))
 
-    # TODO: Uncomment when using real data
-    # # We can only use the training set to avoid data leakage
-    # train_emails, train_labels = train
-    # train_urls, train_tokens, train_words = preprocess_emails(train_emails)
-    # if FORCE_GENERATE_SUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
-    #     generate_suspicious_words(train_words, train_labels)
+    train_words = [email["words"] for email in train[0]]
+    train_labels = train[1]
+    if FORCE_GENERATE_SUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
+        generate_suspicious_words(train_words, train_labels)
 
-    ml = Model()
-    ml.fit(*train)
+    train, val, test = ((extract_features(X), y) for X, y in (train, val, test))
+
+    ml = load_model(MODEL_PATH)
+    try:
+        ml.fit(*train)
+    except FutureWarning as e:
+        print(f"Error occurred while training model: {e}")
+
+    y_pred = ml.predict(val[0])
+    print(f"Best model: {ml.best_params_}" if hasattr(ml, "best_params_") else ml)
     save_model(ml, MODEL_PATH)
     print(f"Train accuracy: {ml.score(*train):.3f}")
     print(f"Validation accuracy: {ml.score(*val):.3f}")
     print(f"Test accuracy: {ml.score(*test):.3f}")
+    print(f"Confusion matrix:\n{confusion_matrix(val[1], y_pred)}")
+    print(f"F1 score: {f1_score(val[1], y_pred):.3f}")
