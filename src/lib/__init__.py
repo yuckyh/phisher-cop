@@ -7,7 +7,6 @@ from typing import Callable, Iterable, TypeVar, cast
 from joblib import Parallel, delayed
 
 from lib.document import Email, PreprocessedEmail
-from lib.feature_extract import count_typosquatted_domains
 
 PROJECT_ROOT = Path(os.path.realpath(__file__)).parents[2]
 MODEL_PATH = os.path.join(PROJECT_ROOT, "model.joblib")
@@ -54,6 +53,7 @@ class PhisherCop:
         from .feature_extract import (
             capital_words_ratio,
             count_ip_addresses,
+            count_typosquatted_domains,
             count_whitelisted_addresses,
             email_domain_matches_url,
             money_tokens_ratio,
