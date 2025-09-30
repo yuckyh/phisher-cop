@@ -54,21 +54,18 @@ def email_from_file(path: str) -> Email:
 
 def email_from_input(
     sender: str,
-    recipient: str,
     subject: str,
     payload: str,
     cc: str,
 ) -> Email:
-    if not sender or not recipient or not subject or not payload:
-        raise ValueError(
-            "Sender, recipient, subject, and payload must not be empty or None."
-        )
+    if not sender or not subject or not payload:
+        raise ValueError("Sender, subject, and payload must not be empty or None.")
     email = Email()
     email["From"] = sender
-    email["To"] = recipient
     email["Cc"] = cc
     email["Subject"] = subject
-    email["Content-Type"] = "text/plain; charset=utf-8"
+    # Assume the payload is HTML as plain text is a subset of HTML anyways
+    email["Content-Type"] = "text/html; charset=utf-8"
     email.set_payload(payload)
     return email
 
