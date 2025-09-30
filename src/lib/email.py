@@ -57,19 +57,16 @@ def email_from_input(
     recipient: str,
     subject: str,
     payload: str,
-    cc: list[str] | None = None,
+    cc: str,
 ) -> Email:
     if not sender or not recipient or not subject or not payload:
         raise ValueError(
             "Sender, recipient, subject, and payload must not be empty or None."
         )
-    if cc is None:
-        cc = []
     email = Email()
     email["From"] = sender
     email["To"] = recipient
-    if cc:
-        email["Cc"] = ", ".join(cc)
+    email["Cc"] = cc
     email["Subject"] = subject
     email["Content-Type"] = "text/plain; charset=utf-8"
     email.set_payload(payload)
