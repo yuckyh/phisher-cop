@@ -30,13 +30,12 @@ def index():
             return render_template("index.html")
         case "POST":
             sender = request.form.get("sender", "")
-            recipient = request.form.get("recipient", "")
             subject = request.form.get("subject", "")
             payload = request.form.get("payload", "")
             cc = request.form.get("cc", "")
 
             try:
-                email = email_from_input(sender, recipient, subject, payload, cc)
+                email = email_from_input(sender, subject, payload, cc)
                 score = model.predict(email)
             except Exception as e:
                 return render_template("index.html", errors=[f"Error: {e}"])
