@@ -131,8 +131,10 @@ def get_email_addresses(email: Email, ignore_errors: bool) -> list[EmailAddress]
 
 
 def normalize_url(url: str) -> Url:
-    """Normalizes a URL by lowercasing, unquoting, stripping trailing slashes
-    and removing params, query, and fragment."""
+    """
+    Normalizes a URL by lowercasing, unquoting, stripping trailing slashes
+    and removing params, query, and fragment.
+    """
     # Lowering must be done before unquoting because capital letters can be percent-encoded
     # Lowering must be done for correct string matching during feature extraction
     unquoted_url = urllib.parse.unquote(url.lower())
@@ -162,8 +164,10 @@ def anchor_urls(dom: BeautifulSoup) -> set[Url]:
 def token_urls(
     raw_tokens: list[str],
 ) -> tuple[set[Url], list[str]]:
-    """Iterates through `raw_tokens` and returns a set of normalized URLs and a list of non-URL tokens.
-    The order of non-URL tokens is preserved."""
+    """
+    Iterates through `raw_tokens` and returns a set of normalized URLs and a list of non-URL tokens.
+    The order of non-URL tokens is preserved.
+    """
     urls = set()
     non_url_tokens = []
     for token in raw_tokens:
@@ -185,8 +189,10 @@ def domains_from_urls(urls: set[Url]) -> list[Domain]:
 
 
 def tokenize_payload(email: Email) -> tuple[set[Url], list[str]]:
-    """Returns a set of normalized URLs and a list of non-URL tokens from the email's payload.
-    The order of non-URL tokens is preserved."""
+    """
+    Returns a set of normalized URLs and a list of non-URL tokens from the email's payload.
+    The order of non-URL tokens is preserved.
+    """
 
     tokens: list[str] = []
     anchor_url_set = set()

@@ -16,7 +16,8 @@ SUSPICIOUS_WORDS = load_suspicious_words()
 
 
 def count_whitelisted_addresses(emails: Iterable[EmailAddress]) -> int:
-    """Count how many email addresses are from a whitelisted domain.
+    """
+    Count how many email addresses are from a whitelisted domain.
 
     Time complexity: `O(n)` where `n` is the number of email addresses.
     Space complexity: `O(1)`.
@@ -30,12 +31,6 @@ def find_suspicious_words(words: Iterable[str]) -> Iterator[int]:
 
     Time complexity: `O(n)` where `n` is the number of words.
     Space complexity: `O(1)`.
-
-    Args:
-        words (Iterable[str]): The words to scan.
-
-    Yields:
-        Iterator[int]: The index of each suspicious keyword found.
     """
     for i, word in enumerate(words):
         if word.lower() in SUSPICIOUS_WORDS:
@@ -45,10 +40,9 @@ def find_suspicious_words(words: Iterable[str]) -> Iterator[int]:
 
 
 def suspicious_word_kernel(x: float) -> float:
-    """A kernel function that gives higher weight to words appearing earlier in the text.
-
-    Args:
-        x: A normalized position in the text in the range [0, 1].
+    """
+    A kernel function that gives higher weight to words appearing earlier in the text.
+    `x` is a normalized position in the text in the range [0, 1].
     """
     # This kernel linearly interpolates between 2 at x=0 and 1 at x=1.
     assert 0 <= x <= 1
@@ -56,9 +50,11 @@ def suspicious_word_kernel(x: float) -> float:
 
 
 def score_suspicious_words(words: list[str]) -> float:
-    """Score the suspicious words in the given list of words.
+    """
+    Score the suspicious words in the given list of words.
     Higher scores are given to suspicious words that appear earlier in the list.
-    This score is normalized so that the length of the list does not affect it."""
+    This score is normalized so that the length of the list does not affect it.
+    """
     end = max(1, len(words) - 1)
     score = 0.0
     # Multiply y by the kernel and then integrate to get the score

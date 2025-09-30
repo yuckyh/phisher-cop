@@ -17,24 +17,28 @@ class BKTree:
         distance_fn: Callable[[str, str], int],
         items: Iterable[str],
     ):
-        """Create a BK-tree with the given `distance_fn` and initial `items`.
+        """
+        Create a BK-tree with the given `distance_fn` and initial `items`.
 
         Time complexity: `O(n * log(n) * O(distance_fn))` on average, `O(n^2 * O(distance_fn))` in the worst case.
         Space complexity: `O(n)`
 
-        Where `n = len(items)`."""
+        Where `n = len(items)`.
+        """
         self.root: BKTreeNode | None = None
         self.distance_fn = distance_fn
         for s in items:
             self.insert(s)
 
     def insert(self, item: str):
-        """Insert `item` into the tree.
+        """
+        Insert `item` into the tree.
 
         Time complexity: `O(log(n) * O(distance_fn))` on average, `O(n * O(distance_fn))` in the worst case.
         Space complexity: `O(1)`
 
-        Where `n` is the number of items in the tree."""
+        Where `n` is the number of items in the tree.
+        """
         if self.root is None:
             self.root = BKTreeNode(label=item, children={})
             return
@@ -54,12 +58,14 @@ class BKTree:
             return
 
     def contains_max_distance(self, item: str, max_distance: int) -> bool:
-        """Check if the tree contains an item with distance at most `max_distance` from `item`.
+        """
+        Check if the tree contains an item with distance at most `max_distance` from `item`.
 
         Time complexity: `O(log(n) * T_d)` on average, `O(n * T_d)` in the worst case.
         Space complexity: `O(log(n))` on average, `O(n)` in the worst case.
 
-        Where `n` is the number of items in the tree and `T_d` is the time complexity of `distance_fn`."""
+        Where `n` is the number of items in the tree and `T_d` is the time complexity of `distance_fn`.
+        """
         assert max_distance >= 0
         if self.root is None:
             return False
@@ -88,10 +94,12 @@ class BKTree:
 
 
 def levenshtein_distance(s1: str, s2: str) -> int:
-    """Compute the Levenshtein distance between two strings.
+    """
+    Compute the Levenshtein distance between two strings.
 
     Time complexity: `O(len(s1) * len(s2))`
-    Space complexity: `O(min(len(s1), len(s2)))`"""
+    Space complexity: `O(min(len(s1), len(s2)))`
+    """
     # Make s2 the shorter string to use less memory
     if len(s1) < len(s2):
         s1, s2 = s2, s1
