@@ -23,11 +23,7 @@ R = TypeVar("R")
 
 
 # TODO: If there is a way to get kwargs from Parallel's kwargs, please change Any
-def parallelize(
-    func: Callable[..., R],
-    X: Iterable[object],
-    **kwargs: Any
-) -> list[R]:
+def parallelize(func: Callable[..., R], X: Iterable[object], **kwargs: Any) -> list[R]:
     """Parallelize calls to func over X.
 
     - If an element of X is a dict, it's passed as kwargs.
@@ -105,7 +101,6 @@ class PhisherCop:
             money_tokens_ratio(tokens),
         ]
 
-
     def get_pipeline(self) -> Pipeline:
         text_transformer = ColumnTransformer(
             [
@@ -125,4 +120,4 @@ class PhisherCop:
         preprocessed_email = self.preprocess_email(email)
         features = self.extract_features(**preprocessed_email)
         ml = load_model(MODEL_PATH)
-        return ml.predict([ features ])[0]
+        return ml.predict([features])[0]

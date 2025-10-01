@@ -6,6 +6,7 @@ FORCE_RETRAIN = True
 
 Model = LinearSVC
 
+
 def save_model(model: Model, path: str) -> None:
     joblib.dump(model, path, compress=("xz", 7))  # type: ignore
 
