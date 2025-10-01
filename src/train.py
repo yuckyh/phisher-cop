@@ -7,7 +7,7 @@ from sklearn.metrics import confusion_matrix, f1_score
 
 from lib import MODEL_PATH, PIPELINE_PATH, parallelize
 from lib.dataset import HAM, load_data
-from lib.document import preprocess_email
+from lib.email import preprocess_email
 from lib.feature_data import SUSPICIOUS_WORDS
 from lib.feature_extract import extract_features
 from lib.model import load_model, load_pipeline, save_model, save_pipeline

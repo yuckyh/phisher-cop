@@ -2,7 +2,7 @@ import os
 import unittest
 from tempfile import TemporaryDirectory
 
-from src.lib.document import email_from_file, payload_dom, raw_payload, tokenize_payload
+from src.lib.email import email_from_file, payload_dom, raw_payload, tokenize_payload
 
 
 class TestDocument(unittest.TestCase):

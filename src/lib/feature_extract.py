@@ -4,8 +4,8 @@ from ipaddress import ip_address
 from typing_extensions import Iterable, Iterator
 
 from lib.bktree import BKTree, levenshtein_distance
-from lib.document import PreprocessedEmail
 from lib.domain import Domain, Url
+from lib.email import PreprocessedEmail
 from lib.email_address import EmailAddress
 from lib.feature_data import load_suspicious_words, load_top_domains
 
