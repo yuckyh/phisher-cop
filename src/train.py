@@ -2,6 +2,8 @@
 
 import os
 
+import numpy as np
+from numpy.typing import NDArray
 from sklearn.metrics import confusion_matrix, f1_score
 
 from lib import MODEL_PATH, PIPELINE_PATH, parallelize
@@ -23,7 +25,9 @@ def top_n(word_counts: dict[str, int], n: int) -> dict[str, int]:
     return {k: v for k, v in descending[:n]}
 
 
-def generate_suspicious_words(email_words: list[list[str]], labels: list[int]) -> None:
+def generate_suspicious_words(
+    email_words: list[list[str]], labels: NDArray[np.uint8]
+) -> None:
     print("Generating suspicious keyword list...")
 
     ham_word_counts = {}
@@ -51,38 +55,40 @@ def generate_suspicious_words(email_words: list[list[str]], labels: list[int]) -
 
 
 if __name__ == "__main__":
-    train, val, test = load_data()
-    for split, name in zip((train, val, test), ("Train", "Validation", "Test")):
-        print(f"{name} set: {len(split[0])} samples")
+    (
+        (train_X, train_y),
+        (val_X, val_y),
+        (test_X, test_y),
+    ) = load_data()
+    for X, name in zip((train_X, val_X, test_X), ("Train", "Validation", "Test")):
+        print(f"{name} set: {len(X)} samples")
 
-    train, val, test = (
-        (parallelize(preprocess_email, X), y) for X, y in (train, val, test)
+    train_X, val_X, test_X = (
+        parallelize(preprocess_email, X) for X in (train_X, val_X, test_X)
     )
 
-    train_words = [email.words for email in train[0]]
-    train_labels = train[1]
     if FORCE_GENERATE_SUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
-        generate_suspicious_words(train_words, train_labels)
+        generate_suspicious_words([email.words for email in train_X], train_y)
 
-    train, val, test = (
-        (parallelize(extract_features, X), y) for X, y in (train, val, test)
+    train_X, val_X, test_X = (
+        parallelize(extract_features, X) for X in (train_X, val_X, test_X)
     )
 
     pipeline = load_pipeline(PIPELINE_PATH)
 
-    train = pipeline.fit_transform(train[0]), train[1]
+    train_X = pipeline.fit_transform(train_X)
 
     save_pipeline(pipeline, PIPELINE_PATH)
 
-    val, test = ((pipeline.transform(X), y) for X, y in (val, test))
+    val_X, test_X = (pipeline.transform(X) for X in (val_X, test_X))
 
     ml = load_model(MODEL_PATH)
-    ml.fit(*train)
+    ml.fit(train_X, train_y)
 
-    y_pred = ml.predict(val[0])
+    y_pred = ml.predict(val_X)
     save_model(ml, MODEL_PATH)
-    print(f"Train accuracy: {ml.score(*train):.3f}")
-    print(f"Validation accuracy: {ml.score(*val):.3f}")
-    print(f"Test accuracy: {ml.score(*test):.3f}")
-    print(f"Confusion matrix:\n{confusion_matrix(val[1], y_pred)}")
-    print(f"F1 score: {f1_score(val[1], y_pred):.3f}")
+    print(f"Train accuracy: {ml.score(train_X, train_y):.3f}")
+    print(f"Validation accuracy: {ml.score(val_X, val_y):.3f}")
+    print(f"Test accuracy: {ml.score(test_X, test_y):.3f}")
+    print(f"Confusion matrix:\n{confusion_matrix(val_y, y_pred)}")
+    print(f"F1 score: {f1_score(val_y, y_pred):.3f}")
