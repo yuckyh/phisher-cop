@@ -4,16 +4,21 @@ import os
 
 import numpy as np
 from numpy.typing import NDArray
+from sklearn.compose import ColumnTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import confusion_matrix, f1_score
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
-from lib import MODEL_PATH, PIPELINE_PATH, parallelize
+from lib import MODEL_PATH, parallelize
 from lib.dataset import Label, load_data
 from lib.email import preprocess_email
 from lib.feature_data import SUSPICIOUS_WORDS
 from lib.feature_extract import extract_features
-from lib.model import load_model, load_pipeline, save_model, save_pipeline
+from lib.model import Model, PhisherCop
 
 FORCE_GENERATE_SUS_WORDS = False
+MODEL_SEED = 69420
 
 
 def top_n(word_counts: dict[str, int], n: int) -> dict[str, int]:
@@ -54,6 +59,33 @@ def generate_suspicious_words(
             f.write(word + "\n")
 
 
+def create_preprocessor() -> Pipeline:
+    text_features = Pipeline(
+        [
+            ("tfidf", TfidfVectorizer(max_features=5000, stop_words="english")),
+            ("scaler", StandardScaler(with_mean=False)),
+        ]
+    )
+    pipeline = Pipeline(
+        [
+            (
+                "preprocessor",
+                ColumnTransformer(
+                    [
+                        ("text", text_features, 0),
+                    ],
+                    remainder=StandardScaler(),
+                ),
+            ),
+        ]
+    )
+    return pipeline
+
+
+def create_model(seed: int) -> Model:
+    return Model(random_state=seed, tol=1e-4, max_iter=5000, C=0.01)
+
+
 if __name__ == "__main__":
     (
         (train_X, train_y),
@@ -74,21 +106,17 @@ if __name__ == "__main__":
         parallelize(extract_features, X) for X in (train_X, val_X, test_X)
     )
 
-    pipeline = load_pipeline(PIPELINE_PATH)
+    preprocessor = create_preprocessor()
+    train_X = preprocessor.fit_transform(train_X)
+    val_X, test_X = (preprocessor.transform(X) for X in (val_X, test_X))
 
-    train_X = pipeline.fit_transform(train_X)
+    model = create_model(MODEL_SEED)
+    model.fit(train_X, train_y)
+    PhisherCop(preprocessor, model).save(MODEL_PATH)
 
-    save_pipeline(pipeline, PIPELINE_PATH)
-
-    val_X, test_X = (pipeline.transform(X) for X in (val_X, test_X))
-
-    ml = load_model(MODEL_PATH)
-    ml.fit(train_X, train_y)
-
-    y_pred = ml.predict(val_X)
-    save_model(ml, MODEL_PATH)
-    print(f"Train accuracy: {ml.score(train_X, train_y):.3f}")
-    print(f"Validation accuracy: {ml.score(val_X, val_y):.3f}")
-    print(f"Test accuracy: {ml.score(test_X, test_y):.3f}")
+    y_pred = model.predict(val_X)
+    print(f"Train accuracy: {model.score(train_X, train_y):.3f}")
+    print(f"Validation accuracy: {model.score(val_X, val_y):.3f}")
+    print(f"Test accuracy: {model.score(test_X, test_y):.3f}")
     print(f"Confusion matrix:\n{confusion_matrix(val_y, y_pred)}")
     print(f"F1 score: {f1_score(val_y, y_pred):.3f}")

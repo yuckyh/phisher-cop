@@ -1,67 +1,36 @@
 import joblib
-from sklearn.compose import ColumnTransformer
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 from sklearn.svm import LinearSVC
 
-MODEL_SEED = 69420
-FORCE_RETRAIN = True
+from lib.email import Email, preprocess_email
+from lib.feature_extract import extract_features
 
 Model = LinearSVC
 
 
-def save_pipeline(pipeline: Pipeline, path: str) -> None:
-    joblib.dump(pipeline, path, compress=("xz", 7))  # type: ignore
+class PhisherCop:
+    """End-to-end inference for e-mail phishing detection."""
 
+    def __init__(self, pipeline: Pipeline, model: Model) -> None:
+        self.pipeline = pipeline
+        self.model = model
 
-def try_load(path: str) -> Model | Pipeline | None:
-    try:
-        if FORCE_RETRAIN:
-            raise FileNotFoundError("Force retrain enabled")
-        return joblib.load(path)
-    except FileNotFoundError as e:
-        print(f"File not found at {path}, creating a new one. ({e})")
-        return None
+    def save(self, path: str) -> None:
+        joblib.dump(self, path, compress=("zlib", 3))  # type: ignore
 
-
-def load_pipeline(path: str) -> Pipeline:
-    """Load or create the ML pipeline."""
-    pipeline = try_load(path)
-    if pipeline and isinstance(pipeline, Pipeline):
-        return pipeline
-
-    text_features = Pipeline(
-        [
-            ("tfidf", TfidfVectorizer(max_features=5000, stop_words="english")),
-            ("scaler", StandardScaler(with_mean=False)),  # Standardize features
-        ]
-    )
-
-    preprocessor = ColumnTransformer(
-        [
-            ("text", text_features, 0),
-        ],
-        remainder=StandardScaler(),
-    )
-
-    pipeline = Pipeline(
-        [
-            ("preprocessor", preprocessor),
-            # ("scaler", StandardScaler(with_mean=False)),  # Standardize features
-            # ("classifier", LinearSVC(random_state=MODEL_SEED, tol=1e-4, max_iter=5000, C=0.01)),
-        ]
-    )
-    return pipeline
-
-
-def save_model(model: Model, path: str) -> None:
-    joblib.dump(model, path, compress=("xz", 7))  # type: ignore
-
-
-def load_model(path: str) -> Model:
-    model = try_load(path)
-    if model and isinstance(model, Model):
+    @staticmethod
+    def load(path: str) -> "PhisherCop":
+        model = joblib.load(path)
+        if not isinstance(model, PhisherCop):
+            raise ValueError("Loaded object is not a PhisherCop instance")
         return model
 
-    return LinearSVC(random_state=MODEL_SEED, tol=1e-4, max_iter=5000, C=0.01)
+    def score_email(self, email: Email) -> float:
+        """
+        Returns the confidence score that the email is a phising email.
+        1.0 is definitely spam, 0.0 is definitely ham.
+        """
+        preprocessed_email = preprocess_email(email)
+        features = extract_features(preprocessed_email)
+        features = self.pipeline.transform([features])[0]
+        return self.model.predict([features])[0]
