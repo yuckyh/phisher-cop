@@ -5,14 +5,14 @@ import os
 import numpy as np
 from sklearn.metrics import confusion_matrix, f1_score
 
-from lib import MODEL_PATH, PhisherCop, parallelize
+from lib import MODEL_PATH, PIPELINE_PATH, PhisherCop, parallelize
 from lib.dataset import HAM, load_data
 from lib.document import (
     Email,
     PreprocessedEmail,
 )
 from lib.feature_data import SUSPICIOUS_WORDS
-from lib.model import load_model, save_model
+from lib.model import load_model, load_pipeline, save_model, save_pipeline
 
 FORCE_GENERATE_SUS_WORDS = False
 
@@ -82,15 +82,16 @@ if __name__ == "__main__":
     train, val, test = ((batch_extract_features(X), y) for X, y in (train, val, test))
 
     train, val, test = (
-        (np.array(X), np.array(y, dtype=np.uint)) for X, y in (train, val, test)
+        (X, np.array(y, dtype=np.uint8)) for X, y in (train, val, test)
     )
 
-    pipeline = PhisherCop().get_pipeline()
+    pipeline = load_pipeline(PIPELINE_PATH)
 
-    train, val, test = (
-        pipeline.fit_transform(X, y) if i == 0 else (pipeline.transform(X), y)
-        for i, (X, y) in enumerate((train, val, test))
-    )
+    train = pipeline.fit_transform(train[0]), train[1]
+
+    save_pipeline(pipeline, PIPELINE_PATH)
+
+    val, test = ((pipeline.transform(X), y) for X, y in (val, test))
 
     ml = load_model(MODEL_PATH)
     ml.fit(*train)
