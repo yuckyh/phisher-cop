@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix, f1_score
 
 from lib import MODEL_PATH, PIPELINE_PATH, parallelize
-from lib.dataset import HAM, load_data
+from lib.dataset import Label, load_data
 from lib.email import preprocess_email
 from lib.feature_data import SUSPICIOUS_WORDS
 from lib.feature_extract import extract_features
@@ -30,7 +30,7 @@ def generate_suspicious_words(email_words: list[list[str]], labels: list[int]) -
     ham_word_counts = {}
     spam_word_counts = {}
     for words, label in zip(email_words, labels):
-        word_counts = ham_word_counts if label == HAM else spam_word_counts
+        word_counts = ham_word_counts if label == Label.HAM else spam_word_counts
         for word in words:
             word = word.lower().strip()
             if not word or not word.isalpha():
