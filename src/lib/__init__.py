@@ -13,10 +13,11 @@ from sklearn.preprocessing import StandardScaler
 from lib.document import Email, PreprocessedEmail
 from lib.domain import Domain, Url
 from lib.email_address import EmailAddress
-from lib.model import load_model
+from lib.model import load_model, load_pipeline
 
 PROJECT_ROOT = Path(os.path.realpath(__file__)).parents[2]
 MODEL_PATH = os.path.join(PROJECT_ROOT, "model.joblib")
+PIPELINE_PATH = os.path.join(PROJECT_ROOT, "pipeline.joblib")
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -68,7 +69,6 @@ class PhisherCop:
             "sender": parse_email_address(str(email["From"])),
             "addresses": get_email_addresses(email),
             "domains": domains_from_urls(urls),
-            # "email": email,
         }
 
     def extract_features(
@@ -101,23 +101,14 @@ class PhisherCop:
             money_tokens_ratio(tokens),
         ]
 
-    def get_pipeline(self) -> Pipeline:
-        text_transformer = ColumnTransformer(
-            [
-                ("tfidf", TfidfVectorizer(), 0),
-            ],
-            remainder="passthrough",
-        )
-
-        return Pipeline(
-            [
-                ("text", text_transformer),
-                ("scaler", StandardScaler(with_mean=False)),  # Standardize features
-            ]
-        )
-
     def score_email(self, email: Email) -> float:
         preprocessed_email = self.preprocess_email(email)
+        # Pass the TypedDict as a single argument to match the updated extract_features signature
+        features = self.extract_features(**preprocessed_email)
+        pipeline = load_pipeline(PIPELINE_PATH)
+        features = pipeline.transform([features])[0]
+        ml = load_model(MODEL_PATH)
+        return ml.predict([features])[0]
         features = self.extract_features(**preprocessed_email)
         ml = load_model(MODEL_PATH)
         return ml.predict([features])[0]
