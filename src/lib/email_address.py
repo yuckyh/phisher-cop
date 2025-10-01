@@ -1,4 +1,6 @@
+import re
 from dataclasses import dataclass
+from email.utils import parseaddr
 from urllib.parse import urlparse
 
 from lib.domain import Domain, parse_domain
@@ -13,25 +15,28 @@ class EmailAddress:
     domain: Domain
 
 
-def parse_email_address(address: str) -> EmailAddress:
-    """Parse an email address into its components."""
-    parsed_address = address.split("<")[-1].split(">")[0] if "<" in address else address
+ADDRESS_PATTERN = re.compile(r"(([^@+]*)\+)?([^@]+)@([^@]+)")
 
-    if not parsed_address:
+
+def parse_email_address(address: str | None) -> EmailAddress:
+    """Parse an email address into its components."""
+    if not isinstance(address, str):
+        raise ValueError(f"Invalid email address: {address}")
+
+    _, email_address = parseaddr(address)
+
+    if not email_address:
         return EmailAddress(
             username="", alias="", domain=Domain(subdomain="", domain_name="", tld="")
         )
 
-    if "@" not in parsed_address:
-        raise ValueError(f"Invalid email address: {parsed_address}, missing '@'")
+    match = ADDRESS_PATTERN.fullmatch(email_address)
+    if not match:
+        raise ValueError(f"Invalid email address: {email_address}")
 
-    username, domain_str = parsed_address.split("@")[-2:]
-    if "+" in username:
-        username, alias = username.split("+", 1)
-    else:
-        alias = ""
+    (_, alias, username, domain_str) = match.groups()
+    alias = alias or ""
 
     url = urlparse("http://" + domain_str)
     domain = parse_domain(url)
-
     return EmailAddress(username=username, alias=alias, domain=domain)
