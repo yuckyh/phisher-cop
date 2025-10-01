@@ -2,7 +2,6 @@
 
 import os
 
-import numpy as np
 from sklearn.metrics import confusion_matrix, f1_score
 
 from lib import MODEL_PATH, PIPELINE_PATH, parallelize
@@ -68,8 +67,6 @@ if __name__ == "__main__":
     train, val, test = (
         (parallelize(extract_features, X), y) for X, y in (train, val, test)
     )
-
-    train, val, test = ((X, np.array(y, dtype=np.uint8)) for X, y in (train, val, test))
 
     pipeline = load_pipeline(PIPELINE_PATH)
 
