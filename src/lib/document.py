@@ -22,6 +22,7 @@ class PreprocessedEmail(TypedDict):
     addresses: list[EmailAddress]
     domains: list[Domain]
 
+
 def email_from_file(path: str) -> Email:
     with open(path, "rb") as file:
         return message_from_bytes(file.read())
