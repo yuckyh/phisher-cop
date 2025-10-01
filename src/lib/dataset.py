@@ -3,6 +3,7 @@ import os
 import random
 import shutil
 import zipfile
+from enum import Enum
 from pathlib import Path
 from typing import TypeAlias
 
@@ -20,9 +21,13 @@ SPLITS = [
     0.1,  # Test
 ]
 
-HAM = 0
-SPAM = 1
+
 DataSplit: TypeAlias = tuple[list[Email], list[int]]
+
+
+class Label(Enum):
+    HAM = 0
+    SPAM = 1
 
 
 def update_hash(hash_func, file_path: str):
@@ -135,14 +140,14 @@ def load_split(split_dir: str) -> DataSplit:
     """Load a dataset split from disk."""
     emails: list[Email] = []
     labels: list[int] = []
-    dir_labels = (("ham", HAM), ("spam", SPAM))
+    dir_labels = (("ham", Label.HAM), ("spam", Label.SPAM))
     for dir, label in [
         (os.path.join(split_dir, dir), label) for dir, label in dir_labels
     ]:
         for filename in os.listdir(dir):
             file_path = os.path.join(dir, filename)
             emails.append(email_from_file(file_path))
-            labels.append(label)
+            labels.append(label.value)
     return emails, labels
 
 
