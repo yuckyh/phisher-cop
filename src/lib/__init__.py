@@ -2,11 +2,18 @@
 
 import os
 from pathlib import Path
-from typing import Callable, Iterable, TypeVar, cast
+from typing import Any, Callable, Iterable, TypeVar, cast
 
 from joblib import Parallel, delayed
+from sklearn.compose import ColumnTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 from lib.document import Email, PreprocessedEmail
+from lib.domain import Domain, Url
+from lib.email_address import EmailAddress
+from lib.model import load_model
 
 PROJECT_ROOT = Path(os.path.realpath(__file__)).parents[2]
 MODEL_PATH = os.path.join(PROJECT_ROOT, "model.joblib")
@@ -15,9 +22,28 @@ T = TypeVar("T")
 R = TypeVar("R")
 
 
-def parallelize(func: Callable[[T], R], X: Iterable[T]) -> list[R]:
-    # Use a list comprehension to avoid generator-related Unknown types and cast the result
-    return cast(list[R], Parallel(n_jobs=-1)([delayed(func)(x) for x in X]))
+# TODO: If there is a way to get kwargs from Parallel's kwargs, please change Any
+def parallelize(
+    func: Callable[..., R],
+    X: Iterable[object],
+    **kwargs: Any
+) -> list[R]:
+    """Parallelize calls to func over X.
+
+    - If an element of X is a dict, it's passed as kwargs.
+    - If it's a tuple/list, it's passed as positional args.
+    - Otherwise it's passed as a single positional arg.
+    """
+    tasks = [
+        delayed(func)(**x)
+        if isinstance(x, dict)
+        else delayed(func)(*x)
+        if isinstance(x, (tuple, list))
+        else delayed(func)(x)
+        # delayed(func)(x)
+        for x in X
+    ]
+    return cast(list[R], Parallel(**kwargs)(tasks))
 
 
 class PhisherCop:
@@ -46,10 +72,18 @@ class PhisherCop:
             "sender": parse_email_address(str(email["From"])),
             "addresses": get_email_addresses(email),
             "domains": domains_from_urls(urls),
-            "email": email,
+            # "email": email,
         }
 
-    def extract_features(self, email: PreprocessedEmail) -> list[float | str]:
+    def extract_features(
+        self,
+        urls: set[Url],
+        tokens: list[str],
+        words: list[str],
+        sender: EmailAddress,
+        addresses: list[EmailAddress],
+        domains: list[Domain],
+    ) -> list[float | str]:
         from .feature_extract import (
             capital_words_ratio,
             count_ip_addresses,
@@ -58,15 +92,6 @@ class PhisherCop:
             email_domain_matches_url,
             money_tokens_ratio,
             score_suspicious_words,
-        )
-
-        urls, tokens, words, sender, addresses, domains = (
-            email["urls"],
-            email["tokens"],
-            email["words"],
-            email["sender"],
-            email["addresses"],
-            email["domains"],
         )
 
         return [
@@ -80,5 +105,24 @@ class PhisherCop:
             money_tokens_ratio(tokens),
         ]
 
-    def score_email(self, email: str) -> float:
-        raise Exception("TODO: Not implemented")
+
+    def get_pipeline(self) -> Pipeline:
+        text_transformer = ColumnTransformer(
+            [
+                ("tfidf", TfidfVectorizer(), 0),
+            ],
+            remainder="passthrough",
+        )
+
+        return Pipeline(
+            [
+                ("text", text_transformer),
+                ("scaler", StandardScaler(with_mean=False)),  # Standardize features
+            ]
+        )
+
+    def score_email(self, email: Email) -> float:
+        preprocessed_email = self.preprocess_email(email)
+        features = self.extract_features(**preprocessed_email)
+        ml = load_model(MODEL_PATH)
+        return ml.predict([ features ])[0]
