@@ -25,7 +25,7 @@ def parse_email_address(address: str) -> EmailAddress:
     if "@" not in parsed_address:
         raise ValueError(f"Invalid email address: {parsed_address}, missing '@'")
 
-    username, domain_str = parsed_address.split("@", 1)
+    username, domain_str = parsed_address.split("@")[-2:]
     if "+" in username:
         username, alias = username.split("+", 1)
     else:

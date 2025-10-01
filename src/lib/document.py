@@ -21,11 +21,7 @@ class PreprocessedEmail(TypedDict):
     sender: EmailAddress
     addresses: list[EmailAddress]
     domains: list[Domain]
-    email: Email
 
-
-# TODO: reconsider this to be file upload specific
-# e.g. different preprocessing logic for web input vs. file input
 def email_from_file(path: str) -> Email:
     with open(path, "rb") as file:
         return message_from_bytes(file.read())

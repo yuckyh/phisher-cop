@@ -3,7 +3,7 @@
 import os
 
 import numpy as np
-from sklearn.metrics import confusion_matrix, f1_score  # noqa
+from sklearn.metrics import confusion_matrix, f1_score
 
 from lib import MODEL_PATH, PhisherCop, parallelize
 from lib.dataset import HAM, load_data
@@ -53,25 +53,18 @@ def generate_suspicious_words(email_words: list[list[str]], labels: list[int]) -
             f.write(word + "\n")
 
 
-def preprocess_emails(
+def batch_preprocess_emails(
     emails: list[Email],
 ) -> list[PreprocessedEmail]:
-    preprocessed_emails = parallelize(PhisherCop().preprocess_email, emails)
+    phisher_cop = PhisherCop()
+    preprocessed_emails = parallelize(phisher_cop.preprocess_email, emails, n_jobs=-1)
     return preprocessed_emails
 
 
-def extract_features(X: list[PreprocessedEmail]) -> list[list[float | str]]:
-    feature_vectors = [PhisherCop().extract_features(email) for email in X]
+def batch_extract_features(X: list[PreprocessedEmail]) -> list[list[float | str]]:
+    phisher_cop = PhisherCop()
+    feature_vectors = parallelize(phisher_cop.extract_features, X, n_jobs=-1)
     return feature_vectors
-
-
-def dummy_data(
-    rng: np.random.Generator, rows: int
-) -> tuple[np.typing.NDArray[np.float64], np.typing.NDArray[np.int8]]:
-    features = rng.standard_normal((rows, 10))
-    labels = features.sum(axis=1) > 0
-    labels = labels.astype(np.int64)
-    return features, labels
 
 
 if __name__ == "__main__":
@@ -79,23 +72,30 @@ if __name__ == "__main__":
     for split, name in zip((train, val, test), ("Train", "Validation", "Test")):
         print(f"{name} set: {len(split[0])} samples")
 
-    train, val, test = ((preprocess_emails(X), y) for X, y in (train, val, test))
+    train, val, test = ((batch_preprocess_emails(X), y) for X, y in (train, val, test))
 
     train_words = [email["words"] for email in train[0]]
     train_labels = train[1]
     if FORCE_GENERATE_SUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
         generate_suspicious_words(train_words, train_labels)
 
-    train, val, test = ((extract_features(X), y) for X, y in (train, val, test))
+    train, val, test = ((batch_extract_features(X), y) for X, y in (train, val, test))
+
+    train, val, test = (
+        (np.array(X), np.array(y, dtype=np.uint)) for X, y in (train, val, test)
+    )
+
+    pipeline = PhisherCop().get_pipeline()
+
+    train, val, test = (
+        pipeline.fit_transform(X, y) if i == 0 else (pipeline.transform(X), y)
+        for i, (X, y) in enumerate((train, val, test))
+    )
 
     ml = load_model(MODEL_PATH)
-    try:
-        ml.fit(*train)
-    except FutureWarning as e:
-        print(f"Error occurred while training model: {e}")
+    ml.fit(*train)
 
     y_pred = ml.predict(val[0])
-    print(f"Best model: {ml.best_params_}" if hasattr(ml, "best_params_") else ml)
     save_model(ml, MODEL_PATH)
     print(f"Train accuracy: {ml.score(*train):.3f}")
     print(f"Validation accuracy: {ml.score(*val):.3f}")
