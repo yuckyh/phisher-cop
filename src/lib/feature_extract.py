@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from typing_extensions import Iterable, Iterator
 
 from lib.bktree import BKTree, levenshtein_distance
+from lib.document import PreprocessedEmail
 from lib.domain import Domain, Url
 from lib.email_address import EmailAddress
 from lib.feature_data import load_suspicious_words, load_top_domains
@@ -137,3 +138,16 @@ def money_tokens_ratio(tokens: list[str]) -> float:
     return sum(1 for token in tokens if MONEY_PATTERN.match(token)) / max(
         1, len(tokens)
     )
+
+
+def extract_features(email: PreprocessedEmail) -> list[float | str]:
+    return [
+        " ".join(email.words),
+        float(count_whitelisted_addresses(email.addresses)),
+        score_suspicious_words(email.words),
+        float(count_typosquatted_domains(email.domains, edit_threshold=1)),
+        float(count_ip_addresses(email.urls)),
+        1.0 if email_domain_matches_url(email.sender, email.domains) else 0.0,
+        capital_words_ratio(email.words),
+        money_tokens_ratio(email.tokens),
+    ]

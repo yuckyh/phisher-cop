@@ -2,9 +2,9 @@
 
 import re
 import urllib.parse
+from dataclasses import dataclass
 from email import message, message_from_bytes
 from email.utils import getaddresses
-from typing import TypedDict
 
 from bs4 import BeautifulSoup, Tag
 
@@ -14,13 +14,37 @@ from lib.email_address import EmailAddress, parse_email_address
 Email = message.Message
 
 
-class PreprocessedEmail(TypedDict):
+@dataclass()
+class PreprocessedEmail:
+    """A preprocessed email with raw features."""
+
     urls: set[Url]
     tokens: list[str]
     words: list[str]
     sender: EmailAddress
     addresses: list[EmailAddress]
     domains: list[Domain]
+
+
+def preprocess_email(email: Email, ignore_errors: bool = True) -> PreprocessedEmail:
+    urls, tokens = tokenize_payload(email)
+    words = words_from_tokens(tokens)
+    try:
+        sender = parse_email_address(email["From"])
+    except ValueError as e:
+        if not ignore_errors:
+            raise e
+        sender = EmailAddress(username="", alias="", domain=Domain("", "", ""))
+    addresses = get_email_addresses(email, ignore_errors)
+    domains = domains_from_urls(urls)
+    return PreprocessedEmail(
+        urls=urls,
+        tokens=tokens,
+        words=words,
+        sender=sender,
+        addresses=addresses,
+        domains=domains,
+    )
 
 
 def email_from_file(path: str) -> Email:
@@ -100,19 +124,15 @@ def payload_dom(email: Email) -> BeautifulSoup:
     return BeautifulSoup(payload, features="lxml")
 
 
-def get_email_addresses(email: Email) -> list[EmailAddress]:
+def get_email_addresses(email: Email, ignore_errors: bool) -> list[EmailAddress]:
     addresses = []
-    values = [
-        value
-        for field in ("From", "To", "Cc", "Bcc", "Reply-To")
-        for value in email.get_all(field, [])
-    ]
-    for real_name, addr in getaddresses(values):
+    values = [value for field in ("From", "Cc") for value in email.get_all(field, [])]
+    for real_name, addr in getaddresses(values, strict=False):
         try:
             addresses.append(parse_email_address(addr))
-        except ValueError:
-            # Skip invalid email addresses
-            pass
+        except ValueError as e:
+            if not ignore_errors:
+                raise e
     return addresses
 
 

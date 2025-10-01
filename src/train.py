@@ -5,13 +5,11 @@ import os
 import numpy as np
 from sklearn.metrics import confusion_matrix, f1_score
 
-from lib import MODEL_PATH, PIPELINE_PATH, PhisherCop, parallelize
+from lib import MODEL_PATH, PIPELINE_PATH, parallelize
 from lib.dataset import HAM, load_data
-from lib.document import (
-    Email,
-    PreprocessedEmail,
-)
+from lib.document import preprocess_email
 from lib.feature_data import SUSPICIOUS_WORDS
+from lib.feature_extract import extract_features
 from lib.model import load_model, load_pipeline, save_model, save_pipeline
 
 FORCE_GENERATE_SUS_WORDS = False
@@ -53,33 +51,23 @@ def generate_suspicious_words(email_words: list[list[str]], labels: list[int]) -
             f.write(word + "\n")
 
 
-def batch_preprocess_emails(
-    emails: list[Email],
-) -> list[PreprocessedEmail]:
-    phisher_cop = PhisherCop()
-    preprocessed_emails = parallelize(phisher_cop.preprocess_email, emails, n_jobs=-1)
-    return preprocessed_emails
-
-
-def batch_extract_features(X: list[PreprocessedEmail]) -> list[list[float | str]]:
-    phisher_cop = PhisherCop()
-    feature_vectors = parallelize(phisher_cop.extract_features, X, n_jobs=-1)
-    return feature_vectors
-
-
 if __name__ == "__main__":
     train, val, test = load_data()
     for split, name in zip((train, val, test), ("Train", "Validation", "Test")):
         print(f"{name} set: {len(split[0])} samples")
 
-    train, val, test = ((batch_preprocess_emails(X), y) for X, y in (train, val, test))
+    train, val, test = (
+        (parallelize(preprocess_email, X), y) for X, y in (train, val, test)
+    )
 
-    train_words = [email["words"] for email in train[0]]
+    train_words = [email.words for email in train[0]]
     train_labels = train[1]
     if FORCE_GENERATE_SUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
         generate_suspicious_words(train_words, train_labels)
 
-    train, val, test = ((batch_extract_features(X), y) for X, y in (train, val, test))
+    train, val, test = (
+        (parallelize(extract_features, X), y) for X, y in (train, val, test)
+    )
 
     train, val, test = ((X, np.array(y, dtype=np.uint8)) for X, y in (train, val, test))
 
