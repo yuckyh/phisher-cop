@@ -73,3 +73,7 @@ tsconfig.json     linguist-language=JSON-with-Comments
 
 # Ignore files (like .npmignore or .gitignore)
 *.*ignore         text
+
+# Big data
+feature_data/*.txt text -diff
+*.joblib           binary
