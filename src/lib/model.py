@@ -1,5 +1,4 @@
 import joblib
-from sklearn.experimental import enable_halving_search_cv  # noqa
 from sklearn.svm import LinearSVC
 
 MODEL_SEED = 69420
