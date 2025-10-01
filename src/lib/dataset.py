@@ -7,6 +7,9 @@ from enum import Enum
 from pathlib import Path
 from typing import TypeAlias
 
+import numpy as np
+from numpy.typing import NDArray
+
 from lib import PROJECT_ROOT
 from lib.email import Email, email_from_file
 
@@ -22,7 +25,7 @@ SPLITS = [
 ]
 
 
-DataSplit: TypeAlias = tuple[list[Email], list[int]]
+DataSplit: TypeAlias = tuple[list[Email], NDArray[np.uint8]]
 
 
 class Label(Enum):
@@ -148,7 +151,7 @@ def load_split(split_dir: str) -> DataSplit:
             file_path = os.path.join(dir, filename)
             emails.append(email_from_file(file_path))
             labels.append(label.value)
-    return emails, labels
+    return emails, np.array(labels, dtype=np.uint8)
 
 
 def load_data() -> tuple[DataSplit, DataSplit, DataSplit]:
