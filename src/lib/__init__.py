@@ -6,7 +6,7 @@ from typing import Any, Callable, Iterable, TypeVar, cast
 
 from joblib import Parallel, delayed
 
-from lib.document import Email
+from lib.email import Email
 from lib.model import load_model, load_pipeline
 
 PROJECT_ROOT = Path(os.path.realpath(__file__)).parents[2]
@@ -30,7 +30,7 @@ class PhisherCop:
     """
 
     def score_email(self, email: Email) -> float:
-        from lib.document import preprocess_email
+        from lib.email import preprocess_email
         from lib.feature_extract import extract_features
 
         preprocessed_email = preprocess_email(email)
