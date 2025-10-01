@@ -81,9 +81,7 @@ if __name__ == "__main__":
 
     train, val, test = ((batch_extract_features(X), y) for X, y in (train, val, test))
 
-    train, val, test = (
-        (X, np.array(y, dtype=np.uint8)) for X, y in (train, val, test)
-    )
+    train, val, test = ((X, np.array(y, dtype=np.uint8)) for X, y in (train, val, test))
 
     pipeline = load_pipeline(PIPELINE_PATH)
 
