@@ -1,3 +1,5 @@
+import os
+
 import joblib
 from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
@@ -20,6 +22,9 @@ class PhisherCop:
 
     @staticmethod
     def load(path: str) -> "PhisherCop":
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"Model file not found: {path}")
+
         model = joblib.load(path)
         if not isinstance(model, PhisherCop):
             raise ValueError("Loaded object is not a PhisherCop instance")
@@ -32,5 +37,5 @@ class PhisherCop:
         """
         preprocessed_email = preprocess_email(email)
         features = extract_features(preprocessed_email)
-        features = self.pipeline.transform([features])[0]
-        return self.model.predict([features])[0]
+        features = self.pipeline.transform([features])
+        return self.model.predict(features)[0]

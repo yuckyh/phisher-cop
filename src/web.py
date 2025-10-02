@@ -1,26 +1,15 @@
 """Entry point for the web server."""
 
-from hashlib import sha256
-
 from flask import Flask, render_template, request
 
-from lib.email import Email, PreprocessedEmail, email_from_input
-from lib.feature_extract import extract_features
+from lib import MODEL_PATH
+from lib.email import email_from_input
+from lib.model import PhisherCop
 
 app = Flask(__name__)
 
 
-# TODO: replace this with the actual model
-class DummyModel:
-    def predict(self, email: Email) -> float:
-        preprocessed = PreprocessedEmail(email, ignore_errors=False)
-        features = extract_features(preprocessed)
-        # Get a random float in [0, 1]
-        float_bytes = sha256(str(features).encode("utf-8")).digest()[0:4]
-        return int.from_bytes(float_bytes, "big") / (2**32 - 1)
-
-
-model = DummyModel()
+model = PhisherCop.load(MODEL_PATH)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -36,7 +25,7 @@ def index():
 
             try:
                 email = email_from_input(sender, subject, payload, cc)
-                score = model.predict(email)
+                score = model.score_email(email)
             except Exception as e:
                 return render_template("index.html", errors=[f"Error: {e}"])
             return render_template("index.html", result=score)
