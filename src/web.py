@@ -39,7 +39,6 @@ def index():
                 score = model.predict(email)
             except Exception as e:
                 return render_template("index.html", errors=[f"Error: {e}"])
-
             return render_template("index.html", result=score)
         case _:
             raise ValueError(f"Unsupported method: {request.method}")
