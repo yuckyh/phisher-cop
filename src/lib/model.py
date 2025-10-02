@@ -4,6 +4,7 @@ import joblib
 from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
 
+from lib.dataset import Label
 from lib.email import Email, preprocess_email
 from lib.feature_extract import extract_features
 
@@ -38,4 +39,4 @@ class PhisherCop:
         preprocessed_email = preprocess_email(email)
         features = extract_features(preprocessed_email)
         features = self.pipeline.transform([features])
-        return self.model.predict(features)[0]
+        return self.model.predict_proba(features)[0, Label.SPAM.value].item()
