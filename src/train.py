@@ -4,8 +4,6 @@ import os
 
 import numpy as np
 from numpy.typing import NDArray
-from sklearn.compose import ColumnTransformer
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import confusion_matrix, f1_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -60,30 +58,23 @@ def generate_suspicious_words(
 
 
 def create_preprocessor() -> Pipeline:
-    text_features = Pipeline(
-        [
-            ("tfidf", TfidfVectorizer(max_features=5000, stop_words="english")),
-            ("scaler", StandardScaler(with_mean=False)),
-        ]
-    )
     pipeline = Pipeline(
         [
-            (
-                "preprocessor",
-                ColumnTransformer(
-                    [
-                        ("text", text_features, 0),
-                    ],
-                    remainder=StandardScaler(),
-                ),
-            ),
+            ("preprocessor", StandardScaler()),
         ]
     )
     return pipeline
 
 
 def create_model(seed: int) -> Model:
-    return Model(random_state=seed, tol=1e-4, max_iter=5000, C=0.01)
+    return Model(
+        random_state=seed,
+        kernel="linear",
+        tol=1e-4,
+        max_iter=5000,
+        C=0.01,
+        probability=True,
+    )
 
 
 if __name__ == "__main__":
