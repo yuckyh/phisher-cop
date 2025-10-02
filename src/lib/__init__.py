@@ -6,7 +6,6 @@ from joblib import Parallel, delayed
 
 PROJECT_ROOT = Path(os.path.realpath(__file__)).parents[2]
 MODEL_PATH = os.path.join(PROJECT_ROOT, "model.joblib")
-PIPELINE_PATH = os.path.join(PROJECT_ROOT, "pipeline.joblib")
 
 T = TypeVar("T")
 R = TypeVar("R")
