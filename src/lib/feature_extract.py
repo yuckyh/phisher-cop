@@ -136,10 +136,9 @@ def money_tokens_ratio(tokens: list[str]) -> float:
     )
 
 
-def extract_features(email: PreprocessedEmail) -> list[float | str]:
+def extract_features(email: PreprocessedEmail) -> list[float]:
     # Order of these features are very IMPORTANT.
     return [
-        " ".join(email.words),
         float(count_whitelisted_addresses(email.addresses)),
         score_suspicious_words(email.words),
         float(count_typosquatted_domains(email.domains, edit_threshold=1)),

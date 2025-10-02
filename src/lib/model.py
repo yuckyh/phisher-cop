@@ -2,13 +2,13 @@ import os
 
 import joblib
 from sklearn.pipeline import Pipeline
-from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
 
 from lib.dataset import Label
 from lib.email import Email, preprocess_email
 from lib.feature_extract import extract_features
 
-Model = LinearSVC
+Model = SVC
 
 
 class PhisherCop:
