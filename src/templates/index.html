@@ -118,8 +118,8 @@
         {% endif %}
 
         <!-- jinja template that only renders if result variable exists (i.e != None) -->
-        {% if result %} {% set status_text = 'Phishing' if result >= 0.5 else
-        'Safe' %}
+        {% if result is defined %} {% set status_text = 'Phishing' if result >=
+        0.5 else 'Safe' %}
         <!-- Result box -->
         <div
           class="result-box {% if result >= 0.5 %}result-phishing{% else %}result-not-phishing{% endif %}"
