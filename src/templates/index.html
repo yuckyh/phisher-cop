@@ -93,11 +93,21 @@
             >Email Body <span class="required-asterisk">*</span>
             <textarea
               name="payload"
-              rows="10"
+              rows="7"
               class="form-input dark-input"
               placeholder="Paste the full email text here..."
               required
             ></textarea>
+          </label>
+        </div>
+        <div>
+          <label class="form-label"
+            >Model Type
+            <select name="model_type" class="form-input dark-input">
+              {% for model_value, model_name in model_types %}
+              <option value="{{ model_value }}">{{ model_name }}</option>
+              {% endfor %}
+            </select>
           </label>
         </div>
 
