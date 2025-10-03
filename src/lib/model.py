@@ -124,19 +124,17 @@ def create_model(model_type: ModelType, seed: int) -> Model:
     match model_type:
         case ModelType.RANDOM_FOREST:
             return RandomForestClassifier(
-                n_estimators=100,
-                max_depth=10,
+                n_estimators=60,
+                max_depth=None,
+                min_samples_split=2,
                 random_state=seed,
-                class_weight="balanced",
                 n_jobs=-1,
             )
         case ModelType.SVM:
             return SVC(
                 random_state=seed,
                 kernel="linear",
-                tol=1e-4,
-                max_iter=5000,
-                C=0.01,
+                C=0.02,
                 probability=True,
             )
 
