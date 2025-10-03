@@ -57,8 +57,8 @@
       <!-- sends data via POST request to server -->
       <form method="POST" action="/" class="form-container" id="phishingForm">
         <div>
-          <label class="form-label"
-            >From <span class="required-asterisk">*</span>
+          <label class="form-label">
+            From <span class="required-asterisk">*</span>
             <input
               type="email"
               name="sender"
@@ -67,9 +67,10 @@
               required
           /></label>
         </div>
+        <div class="form-spacer-sm"></div>
         <div>
-          <label class="form-label"
-            >CC
+          <label class="form-label">
+            CC
             <input
               type="text"
               name="cc"
@@ -77,9 +78,10 @@
               placeholder="e.g., cc@example.com, dd@example.com"
           /></label>
         </div>
+        <div class="form-spacer-sm"></div>
         <div>
-          <label class="form-label"
-            >Subject <span class="required-asterisk">*</span>
+          <label class="form-label">
+            Subject <span class="required-asterisk">*</span>
             <input
               type="text"
               name="subject"
@@ -88,9 +90,10 @@
               required
           /></label>
         </div>
+        <div class="form-spacer-sm"></div>
         <div>
-          <label class="form-label"
-            >Email Body <span class="required-asterisk">*</span>
+          <label class="form-label">
+            Email Body <span class="required-asterisk">*</span>
             <textarea
               name="payload"
               rows="7"
@@ -100,9 +103,10 @@
             ></textarea>
           </label>
         </div>
+        <div class="form-spacer-lg"></div>
         <div>
-          <label class="form-label"
-            >Model Type
+          <label class="form-label">
+            Model Type
             <select name="model_type" class="form-input dark-input">
               {% for model_value, model_name in model_types %}
               <option value="{{ model_value }}">{{ model_name }}</option>
@@ -111,7 +115,6 @@
           </label>
         </div>
 
-        <!-- Submit Button -->
         <button type="submit" class="submit-button dark-button">
           Check for Phishing
         </button>
@@ -138,7 +141,7 @@
           <p class="text-xl font-bold mb-2">Verdict: {{ status_text }}</p>
 
           <!-- Display the numerical score for detail -->
-          <p class="text-sm">Score: {{ "%0.2f" | format(result) }}%</p>
+          <p class="text-sm mb-0">Score: {{ "%0.2f" | format(result) }}%</p>
         </div>
         {% endif %}
       </form>
