@@ -66,44 +66,28 @@ def generate_suspicious_words(
 
 if __name__ == "__main__":
     if not FORCE_GENERATE_SUS_WORDS and not FORCE_NO_CACHE and os.path.exists(CACHE):
-        (
-            (train_X, train_y),
-            (val_X, val_y),
-            (test_X, test_y),
-            preprocessor,
-        ) = joblib.load(CACHE)
+        (train_X, train_y), (test_X, test_y), preprocessor = joblib.load(CACHE)
         print("Loaded preprocessed data from cache")
     else:
-        (
-            (train_X, train_y),
-            (val_X, val_y),
-            (test_X, test_y),
-        ) = load_data()
-        for X, name in zip((train_X, val_X, test_X), ("Train", "Validation", "Test")):
+        (train_X, train_y), (test_X, test_y) = load_data()
+        for X, name in zip((train_X, test_X), ("Train", "Test")):
             print(f"{name} set: {len(X)} samples")
 
-        train_X, val_X, test_X = (
-            parallelize(preprocess_email, X) for X in (train_X, val_X, test_X)
-        )
+        train_X, test_X = (parallelize(preprocess_email, X) for X in (train_X, test_X))
 
         if FORCE_GENERATE_SUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
             generate_suspicious_words([email.words for email in train_X], train_y)
 
-        train_X, val_X, test_X = (
+        train_X, test_X = (
             parallelize(lambda x: extract_features(MODEL_TYPE, x), X)
-            for X in (train_X, val_X, test_X)
+            for X in (train_X, test_X)
         )
 
         preprocessor = create_preprocessor(MODEL_TYPE)
         train_X = preprocessor.fit_transform(train_X)
-        val_X, test_X = (preprocessor.transform(X) for X in (val_X, test_X))
+        test_X = preprocessor.transform(test_X)
         joblib.dump(
-            (
-                (train_X, train_y),
-                (val_X, val_y),
-                (test_X, test_y),
-                preprocessor,
-            ),
+            ((train_X, train_y), (test_X, test_y), preprocessor),
             CACHE,
         )
 
@@ -112,9 +96,8 @@ if __name__ == "__main__":
     PhisherCop(preprocessor, model).save(MODEL_TYPE.default_path)
     print(f"Saved trained model to {MODEL_TYPE.default_path}")
 
-    y_pred = model.predict(val_X)
+    y_pred = model.predict(test_X)
     print(f"Train accuracy: {model.score(train_X, train_y):.3f}")
-    print(f"Validation accuracy: {model.score(val_X, val_y):.3f}")
     print(f"Test accuracy: {model.score(test_X, test_y):.3f}")
-    print(f"Confusion matrix:\n{confusion_matrix(val_y, y_pred)}")
-    print(f"F1 score: {f1_score(val_y, y_pred):.3f}")
+    print(f"Confusion matrix:\n{confusion_matrix(test_y, y_pred)}")
+    print(f"F1 score: {f1_score(test_y, y_pred):.3f}")
