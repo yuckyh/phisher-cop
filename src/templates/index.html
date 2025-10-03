@@ -128,7 +128,7 @@
           <p class="text-xl font-bold mb-2">Verdict: {{ status_text }}</p>
 
           <!-- Display the numerical score for detail -->
-          <p class="text-sm">Score: {{ "%0.4f" | format(result) }}</p>
+          <p class="text-sm">Score: {{ "%0.2f" | format(result) }}%</p>
         </div>
         {% endif %}
       </form>
