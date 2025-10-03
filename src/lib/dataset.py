@@ -14,14 +14,13 @@ from lib import PROJECT_ROOT
 from lib.email import Email, email_from_file
 
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
-DATA_HASH_EXPECTED = "7f1c2176ecb5b133e086c7a9e617c2e4b86ce50c80d02325029ef47ba36340b0"
+DATA_HASH_EXPECTED = "c0f1685bc4d338c30eb6841f32f6629170f672d81c725b81f57ed0b5a83fbfdb"
 ZIP_PATH = os.path.join(PROJECT_ROOT, "archive.zip")
 ZIP_HASH_EXPECTED = "bfac1859ea48dd2105a6c351e2cf3b3c0c0995c0f9e55b996df6a740b5803a8a"
 
 SPLITS = [
     0.8,  # Train
-    0.1,  # Validation
-    0.1,  # Test
+    0.2,  # Test
 ]
 
 
@@ -106,8 +105,8 @@ def unzip(zip_path: str, zip_hash_expected: str, out_dir: str):
 
 
 def restructure_splits(out_dir: str, splits: list[float]):
-    """Restructure the unzipped data into train/val/test splits."""
-    assert len(splits) == 3
+    """Restructure the unzipped data into train/test splits."""
+    assert len(splits) == 2
 
     # This file is not an email
     os.remove(os.path.join(out_dir, "spam_2", "spam_2", "cmds"))
@@ -117,16 +116,12 @@ def restructure_splits(out_dir: str, splits: list[float]):
         split_dir(os.path.join(out_dir, dir, dir), splits) for dir in dirs
     )
 
-    ham_train, ham_val, ham_test = (
-        easy + hard for easy, hard in zip(easy_ham, hard_ham)
-    )
-    spam_train, spam_val, spam_test = spam
+    ham_train, ham_test = (easy + hard for easy, hard in zip(easy_ham, hard_ham))
+    spam_train, spam_test = spam
 
     for files, split, label in (
         (ham_train, "train", "ham"),
         (spam_train, "train", "spam"),
-        (ham_val, "val", "ham"),
-        (spam_val, "val", "spam"),
         (ham_test, "test", "ham"),
         (spam_test, "test", "spam"),
     ):
@@ -154,7 +149,7 @@ def load_split(split_dir: str) -> DataSplit:
     return emails, np.array(labels, dtype=np.uint8)
 
 
-def load_data() -> tuple[DataSplit, DataSplit, DataSplit]:
+def load_data() -> tuple[DataSplit, DataSplit]:
     """
     Load the dataset from the disk, unzipping and preparing it if necessary.
     Before running, download the dataset and place it in this project's root directory as `archive.zip`:
@@ -172,6 +167,5 @@ def load_data() -> tuple[DataSplit, DataSplit, DataSplit]:
 
     return (
         load_split(os.path.join(DATA_DIR, "train")),
-        load_split(os.path.join(DATA_DIR, "val")),
         load_split(os.path.join(DATA_DIR, "test")),
     )
