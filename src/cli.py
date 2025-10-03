@@ -2,14 +2,8 @@
 
 import click
 
-from lib import MODEL_PATH
-from lib.document import (
-    email_addresses,
-    email_from_file,
-    payload_dom,
-    tokenize_dom,
-    words_from_tokens,
-)
+from lib.email import email_from_file
+from lib.model import ModelType, PhisherCop
 
 
 @click.command()
@@ -19,22 +13,20 @@ from lib.document import (
     "-m",
     "--model-path",
     type=click.Path(exists=True, dir_okay=False, readable=True),
-    default=MODEL_PATH,
+    default=ModelType.SVM.default_path,
     help="Path to the trained model file.",
 )
 def main(filepath: str, model_path: str):
     """Reads an email from the file at FILEPATH and prints a confidence score of
     how likely it is to be a phishing email to stdout, along with relevant stats"""
+    model = PhisherCop.load(model_path)
     email = email_from_file(filepath)
-    addresses = email_addresses(email)
-    dom = payload_dom(email)
-    urls, tokens = tokenize_dom(dom)
-    words = words_from_tokens(tokens)
-    print(f"{model_path=}")
-    print(f"{addresses=}")
-    print(f"{urls=}")
-    print(f"{words=}")
-    # TODO: implement the rest
+    score = model.score_email(email)
+    print(f"Phishing score: {score * 100:.2f}%")
+    if score >= 0.5:
+        print("This email is likely a phishing email.")
+    else:
+        print("This email is likely a legitimate email.")
 
 
 if __name__ == "__main__":
