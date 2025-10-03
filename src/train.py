@@ -6,18 +6,22 @@ import joblib
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.metrics import confusion_matrix, f1_score
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 
-from lib import MODEL_PATH, parallelize
+from lib import parallelize
 from lib.dataset import Label, load_data
 from lib.email import preprocess_email
 from lib.feature_data import SUSPICIOUS_WORDS
-from lib.feature_extract import extract_features
-from lib.model import Model, PhisherCop
+from lib.model import (
+    ModelType,
+    PhisherCop,
+    create_model,
+    create_preprocessor,
+    extract_features,
+)
 
 FORCE_GENERATE_SUS_WORDS = False
 FORCE_NO_CACHE = False
+MODEL_TYPE = ModelType.SVM
 MODEL_SEED = 69420
 CACHE = "cache.joblib"
 
@@ -60,26 +64,6 @@ def generate_suspicious_words(
             f.write(word + "\n")
 
 
-def create_preprocessor() -> Pipeline:
-    pipeline = Pipeline(
-        [
-            ("preprocessor", StandardScaler()),
-        ]
-    )
-    return pipeline
-
-
-def create_model(seed: int) -> Model:
-    return Model(
-        random_state=seed,
-        kernel="linear",
-        tol=1e-4,
-        max_iter=5000,
-        C=0.01,
-        probability=True,
-    )
-
-
 if __name__ == "__main__":
     if not FORCE_GENERATE_SUS_WORDS and not FORCE_NO_CACHE and os.path.exists(CACHE):
         (
@@ -106,10 +90,11 @@ if __name__ == "__main__":
             generate_suspicious_words([email.words for email in train_X], train_y)
 
         train_X, val_X, test_X = (
-            parallelize(extract_features, X) for X in (train_X, val_X, test_X)
+            parallelize(lambda x: extract_features(MODEL_TYPE, x), X)
+            for X in (train_X, val_X, test_X)
         )
 
-        preprocessor = create_preprocessor()
+        preprocessor = create_preprocessor(MODEL_TYPE)
         train_X = preprocessor.fit_transform(train_X)
         val_X, test_X = (preprocessor.transform(X) for X in (val_X, test_X))
         joblib.dump(
@@ -122,9 +107,10 @@ if __name__ == "__main__":
             CACHE,
         )
 
-    model = create_model(MODEL_SEED)
+    model = create_model(MODEL_TYPE, MODEL_SEED)
     model.fit(train_X, train_y)
-    PhisherCop(preprocessor, model).save(MODEL_PATH)
+    PhisherCop(preprocessor, model).save(MODEL_TYPE.default_path)
+    print(f"Saved trained model to {MODEL_TYPE.default_path}")
 
     y_pred = model.predict(val_X)
     print(f"Train accuracy: {model.score(train_X, train_y):.3f}")
