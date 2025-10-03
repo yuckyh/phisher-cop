@@ -12,5 +12,4 @@ __pycache__/
 .coverage
 
 archive.zip
-cache.joblib
 data/
