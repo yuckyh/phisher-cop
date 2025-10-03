@@ -5,7 +5,6 @@ from typing import Callable, Iterable, TypeVar, cast
 from joblib import Parallel, delayed
 
 PROJECT_ROOT = Path(os.path.realpath(__file__)).parents[2]
-MODEL_PATH = os.path.join(PROJECT_ROOT, "model.joblib")
 
 T = TypeVar("T")
 R = TypeVar("R")
