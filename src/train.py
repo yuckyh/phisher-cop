@@ -1,6 +1,7 @@
 """Entry point for the model training script."""
 
 import os
+from functools import partial
 
 import numpy as np
 from numpy.typing import NDArray
@@ -72,8 +73,7 @@ if __name__ == "__main__":
         generate_suspicious_words([email.words for email in train_X], train_y)
 
     train_X, test_X = (
-        parallelize(lambda x: extract_features(MODEL_TYPE, x), X)
-        for X in (train_X, test_X)
+        parallelize(partial(extract_features, MODEL_TYPE), X) for X in (train_X, test_X)
     )
 
     preprocessor = create_preprocessor(MODEL_TYPE)
