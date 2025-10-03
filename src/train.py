@@ -2,7 +2,6 @@
 
 import os
 
-import joblib
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.metrics import confusion_matrix, f1_score
@@ -20,10 +19,8 @@ from lib.model import (
 )
 
 FORCE_GENERATE_SUS_WORDS = False
-FORCE_NO_CACHE = False
 MODEL_TYPE = ModelType.SVM
 MODEL_SEED = 69420
-CACHE = "cache.joblib"
 
 
 def top_n(word_counts: dict[str, int], n: int) -> dict[str, int]:
@@ -65,31 +62,23 @@ def generate_suspicious_words(
 
 
 if __name__ == "__main__":
-    if not FORCE_GENERATE_SUS_WORDS and not FORCE_NO_CACHE and os.path.exists(CACHE):
-        (train_X, train_y), (test_X, test_y), preprocessor = joblib.load(CACHE)
-        print("Loaded preprocessed data from cache")
-    else:
-        (train_X, train_y), (test_X, test_y) = load_data()
-        for X, name in zip((train_X, test_X), ("Train", "Test")):
-            print(f"{name} set: {len(X)} samples")
+    (train_X, train_y), (test_X, test_y) = load_data()
+    for X, name in zip((train_X, test_X), ("Train", "Test")):
+        print(f"{name} set: {len(X)} samples")
 
-        train_X, test_X = (parallelize(preprocess_email, X) for X in (train_X, test_X))
+    train_X, test_X = (parallelize(preprocess_email, X) for X in (train_X, test_X))
 
-        if FORCE_GENERATE_SUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
-            generate_suspicious_words([email.words for email in train_X], train_y)
+    if FORCE_GENERATE_SUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
+        generate_suspicious_words([email.words for email in train_X], train_y)
 
-        train_X, test_X = (
-            parallelize(lambda x: extract_features(MODEL_TYPE, x), X)
-            for X in (train_X, test_X)
-        )
+    train_X, test_X = (
+        parallelize(lambda x: extract_features(MODEL_TYPE, x), X)
+        for X in (train_X, test_X)
+    )
 
-        preprocessor = create_preprocessor(MODEL_TYPE)
-        train_X = preprocessor.fit_transform(train_X)
-        test_X = preprocessor.transform(test_X)
-        joblib.dump(
-            ((train_X, train_y), (test_X, test_y), preprocessor),
-            CACHE,
-        )
+    preprocessor = create_preprocessor(MODEL_TYPE)
+    train_X = preprocessor.fit_transform(train_X)
+    test_X = preprocessor.transform(test_X)
 
     model = create_model(MODEL_TYPE, MODEL_SEED)
     model.fit(train_X, train_y)
