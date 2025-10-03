@@ -64,6 +64,7 @@ class PhisherCop:
                 raise ValueError("Unsupported model type")
 
     def save(self, path: str) -> None:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         joblib.dump(self, path, compress=("zlib", 3))  # type: ignore
 
     @staticmethod
