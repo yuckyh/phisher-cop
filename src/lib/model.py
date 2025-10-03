@@ -83,7 +83,7 @@ class PhisherCop:
         Returns the confidence score that the email is a phising email.
         1.0 is definitely spam, 0.0 is definitely ham.
         """
-        preprocessed_email = preprocess_email(email)
+        preprocessed_email = preprocess_email(email, False)
         features = extract_features(self.model_type, preprocessed_email)
         features = self.pipeline.transform([features])
         return self.model.predict_proba(features)[0, Label.SPAM.value].item()  # type: ignore
