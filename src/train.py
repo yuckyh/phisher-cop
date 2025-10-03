@@ -2,6 +2,7 @@
 
 import os
 
+import joblib
 import numpy as np
 from numpy.typing import NDArray
 from sklearn.metrics import confusion_matrix, f1_score
@@ -16,7 +17,9 @@ from lib.feature_extract import extract_features
 from lib.model import Model, PhisherCop
 
 FORCE_GENERATE_SUS_WORDS = False
+FORCE_NO_CACHE = False
 MODEL_SEED = 69420
+CACHE = "cache.joblib"
 
 
 def top_n(word_counts: dict[str, int], n: int) -> dict[str, int]:
@@ -78,28 +81,46 @@ def create_model(seed: int) -> Model:
 
 
 if __name__ == "__main__":
-    (
-        (train_X, train_y),
-        (val_X, val_y),
-        (test_X, test_y),
-    ) = load_data()
-    for X, name in zip((train_X, val_X, test_X), ("Train", "Validation", "Test")):
-        print(f"{name} set: {len(X)} samples")
+    if not FORCE_GENERATE_SUS_WORDS and not FORCE_NO_CACHE and os.path.exists(CACHE):
+        (
+            (train_X, train_y),
+            (val_X, val_y),
+            (test_X, test_y),
+            preprocessor,
+        ) = joblib.load(CACHE)
+        print("Loaded preprocessed data from cache")
+    else:
+        (
+            (train_X, train_y),
+            (val_X, val_y),
+            (test_X, test_y),
+        ) = load_data()
+        for X, name in zip((train_X, val_X, test_X), ("Train", "Validation", "Test")):
+            print(f"{name} set: {len(X)} samples")
 
-    train_X, val_X, test_X = (
-        parallelize(preprocess_email, X) for X in (train_X, val_X, test_X)
-    )
+        train_X, val_X, test_X = (
+            parallelize(preprocess_email, X) for X in (train_X, val_X, test_X)
+        )
 
-    if FORCE_GENERATE_SUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
-        generate_suspicious_words([email.words for email in train_X], train_y)
+        if FORCE_GENERATE_SUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
+            generate_suspicious_words([email.words for email in train_X], train_y)
 
-    train_X, val_X, test_X = (
-        parallelize(extract_features, X) for X in (train_X, val_X, test_X)
-    )
+        train_X, val_X, test_X = (
+            parallelize(extract_features, X) for X in (train_X, val_X, test_X)
+        )
 
-    preprocessor = create_preprocessor()
-    train_X = preprocessor.fit_transform(train_X)
-    val_X, test_X = (preprocessor.transform(X) for X in (val_X, test_X))
+        preprocessor = create_preprocessor()
+        train_X = preprocessor.fit_transform(train_X)
+        val_X, test_X = (preprocessor.transform(X) for X in (val_X, test_X))
+        joblib.dump(
+            (
+                (train_X, train_y),
+                (val_X, val_y),
+                (test_X, test_y),
+                preprocessor,
+            ),
+            CACHE,
+        )
 
     model = create_model(MODEL_SEED)
     model.fit(train_X, train_y)
