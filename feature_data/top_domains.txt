@@ -1,4 +1,3 @@
-domain
 1rx.io
 2mdn.net
 33across.com
