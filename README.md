@@ -2,6 +2,22 @@
 
 A simple email phishing detector.
 
+## Message to Professor
+
+Hi Professor! If you're reading this, please skip ahead to the "Running the project without uv" section.
+All the necessary files that aren't tracked by git are included in this zip file we submitted, everything should just work out-of-the-box.
+
+The `.git/` folder is also included as a proof of work.
+You can see the full commit history by running `git log -p`.
+
+## Table Of Contents
+
+- [Development](#development)
+  - [Linting and formatting](#linting-and-formatting)
+  - [GitHub](#github)
+- [Training the model](#training-the-model)
+- [Running the project without uv](#running-the-project-without-uv)
+
 ## Development
 
 This project uses uv to manage the Python environment.
@@ -69,25 +85,19 @@ Then, just run the training script:
 uv run -s src/train.py
 ```
 
-## Running the project without uv (for the professor's sake)
+Note that this only trains a single model. To change the type of model trained, modify the `MODEL_TYPE` variable in `src/train.py`.
+
+## Running the project without uv
 
 > Recommended python version: 3.12.11
 
-1.  There is a GitHub action that does this step, you shouldn't have to do it manually.
-
-Create the `requirements.txt` file. This will give pip the packages and versions to install.
-
-```bash
-uv export --format requirements.txt --locked --no-dev --no-emit-workspace -o requirements.txt  # We run this command and send requirements.txt to the professor
-```
-
-2. Create a virtual environment
+1. Create a virtual environment
 
 ```bash
 python3 -m venv .venv
 ```
 
-3. Activate the virtual environment
+2. Activate the virtual environment
 
 - On Windows
 
@@ -100,13 +110,13 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-4. Install the dependencies
+3. Install the dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-5. Run the scripts
+4. Run the scripts
 
 ```bash
 python3 src/cli.py         # Run the CLI
@@ -114,3 +124,5 @@ python3 src/web.py         # Run the web server
 python3 src/train.py       # Train the ML model
 python3 -m unittest tests  # Run the tests
 ```
+
+Running `src/train.py` will also unpack the dataset to `data/`. Each file in `data/` is an email that can be used as input to the CLI.
