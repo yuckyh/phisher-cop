@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import lru_cache
 
 from typing_extensions import Callable, Iterable
 
@@ -57,6 +58,7 @@ class BKTree:
             parent.children[distance] = BKTreeNode(label=item, children={})
             return
 
+    @lru_cache(maxsize=1000)
     def contains_max_distance(self, item: str, max_distance: int) -> bool:
         """
         Check if the tree contains an item with distance at most `max_distance` from `item`.
