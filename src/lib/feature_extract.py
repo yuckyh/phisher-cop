@@ -3,10 +3,10 @@ from ipaddress import ip_address
 
 from typing_extensions import Iterable, Iterator
 
-from lib.bktree import BKTree, levenshtein_distance
-from lib.domain import Domain, Url
-from lib.email_address import EmailAddress
-from lib.feature_data import load_suspicious_words, load_top_domains
+from .bktree import BKTree, levenshtein_distance
+from .domain import Domain, Url
+from .email_address import EmailAddress
+from .feature_data import load_suspicious_words, load_top_domains
 
 # Define these outside the functions to avoid reloading the data on each call.
 SAFE_DOMAINS = load_top_domains()

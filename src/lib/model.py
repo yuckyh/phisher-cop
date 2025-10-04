@@ -9,10 +9,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from lib import PROJECT_ROOT
-from lib.dataset import Label
-from lib.email import Email, PreprocessedEmail, preprocess_email
-from lib.feature_extract import (
+from . import PROJECT_ROOT
+from .dataset import Label
+from .email import Email, PreprocessedEmail, preprocess_email
+from .feature_extract import (
     capital_words_ratio,
     count_ip_addresses,
     count_typosquatted_domains,

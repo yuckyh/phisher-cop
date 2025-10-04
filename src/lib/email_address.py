@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from email.utils import parseaddr
 from urllib.parse import urlparse
 
-from lib.domain import Domain, parse_domain
+from .domain import Domain, parse_domain
 
 
 @dataclass()

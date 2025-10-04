@@ -10,8 +10,8 @@ from typing import TypeAlias
 import numpy as np
 from numpy.typing import NDArray
 
-from lib import PROJECT_ROOT
-from lib.email import Email, email_from_file
+from . import PROJECT_ROOT
+from .email import Email, email_from_file
 
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
 DATA_HASH_EXPECTED = "c0f1685bc4d338c30eb6841f32f6629170f672d81c725b81f57ed0b5a83fbfdb"
