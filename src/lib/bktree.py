@@ -14,7 +14,7 @@ class BKTree:
 
     def __init__(
         self,
-        distance_fn: Callable[[str, str], int],
+        distance_fn: Callable[[str, str, int | None], int],
         items: Iterable[str],
     ):
         """
@@ -45,7 +45,7 @@ class BKTree:
 
         parent = self.root
         while True:
-            distance = self.distance_fn(item, parent.label)
+            distance = self.distance_fn(item, parent.label, None)
             # All descendants must have the same distance to the parent,
             child = parent.children.get(distance)
             # So item must be a descendant of child
@@ -74,7 +74,7 @@ class BKTree:
         nodes_to_visit = [self.root]
         while len(nodes_to_visit) > 0:
             node = nodes_to_visit.pop()
-            distance = self.distance_fn(item, node.label)
+            distance = self.distance_fn(item, node.label, max_distance)
             if distance <= max_distance:
                 return True
 
@@ -93,9 +93,10 @@ class BKTree:
         return f"BKTree(root={self.root},distance_fn={self.distance_fn})"  # pragma: no cover
 
 
-def levenshtein_distance(s1: str, s2: str) -> int:
+def levenshtein_distance(s1: str, s2: str, max_distance: int | None = None) -> int:
     """
     Compute the Levenshtein distance between two strings.
+    Stops early if the distance exceeds `max_distance`, if provided.
 
     Time complexity: `O(len(s1) * len(s2))`
     Space complexity: `O(min(len(s1), len(s2)))`
@@ -103,7 +104,6 @@ def levenshtein_distance(s1: str, s2: str) -> int:
     # Make s2 the shorter string to use less memory
     if len(s1) < len(s2):
         s1, s2 = s2, s1
-    assert len(s1) >= len(s2)
 
     # Optimization for trivial case
     if len(s2) == 0:
@@ -124,5 +124,8 @@ def levenshtein_distance(s1: str, s2: str) -> int:
         # We computed the distances of s1[:i+1] and all prefixes of s2,
         # so we can move to the next row
         previous_row = current_row
+        # Exit early if the minimum distance exceeds max_distance
+        if max_distance is not None and min(current_row) > max_distance:
+            return max_distance + 1
 
     return previous_row[-1]

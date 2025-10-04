@@ -77,6 +77,7 @@ def count_typosquatted_domains(
     return sum(
         1
         for domain in domains
+        # Put cheap membership check first to avoid expensive BK-tree check
         if domain.host not in SAFE_DOMAINS
         and SAFE_DOMAIN_TREE.contains_max_distance(domain.host, edit_threshold)
     )
