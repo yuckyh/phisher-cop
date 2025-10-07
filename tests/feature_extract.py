@@ -6,6 +6,9 @@ from src.lib.email import domains_from_urls
 from src.lib.email_address import parse_email_address
 from src.lib.feature_extract import (
     capital_words_ratio,
+    count_ip_addresses,
+    count_typosquatted_domains,
+    count_whitelisted_addresses,
     email_domain_matches_url,
     find_suspicious_words,
     is_ip_address,
@@ -21,6 +24,19 @@ def test_kernel(x: float) -> float:
 
 
 class TestFeatureExtract(unittest.TestCase):
+    def test_count_whitelisted_addresses(self):
+        count = count_whitelisted_addresses(
+            [
+                parse_email_address("safe@example.com"),
+                parse_email_address("scam@unsafe.com"),
+                parse_email_address("gov@trusted.org"),
+                parse_email_address("gov@trusted.org.scam"),
+                parse_email_address("gov@fbi.trusted.org"),
+            ],
+            {"example.com", "trusted.org"},
+        )
+        self.assertEqual(count, 3)
+
     def test_find_suspicious_words(self):
         actual = list(find_suspicious_words(["hi", "HoW", "are", "yOU"], {"hi", "you"}))
         expected = [0, 3]
@@ -86,6 +102,24 @@ class TestFeatureExtract(unittest.TestCase):
         self.assertFalse(is_typosquatted_domain("facebook.com", tree, 3))
         self.assertFalse(is_typosquatted_domain("example.com", tree, 3))
 
+        self.assertEqual(
+            count_typosquatted_domains(
+                domains_from_urls(
+                    {
+                        urlparse("http://abcd.org"),
+                        urlparse("http://example.com.net"),
+                        urlparse("http://www.smple.org"),
+                        urlparse("https://example.com"),
+                        urlparse("https://ex4mple.com"),
+                    }
+                ),
+                tree,
+                1,
+            ),
+            2,
+        )
+        self.assertEqual(count_typosquatted_domains([], tree, 1), 0)
+
         tree = BKTree(levenshtein_distance, [])
         self.assertFalse(is_typosquatted_domain("anything.com", tree, 100))
         self.assertFalse(is_typosquatted_domain("", tree, 1))
@@ -101,6 +135,19 @@ class TestFeatureExtract(unittest.TestCase):
         self.assertFalse(is_ip_address(urlparse("https://a.b.com/abc/e?q=1#frag")))
         self.assertFalse(is_ip_address(urlparse("https://1.1.1.1.edu")))
         self.assertFalse(is_ip_address(urlparse("https://test.com/1.1.1.1")))
+
+        self.assertEqual(
+            count_ip_addresses(
+                [
+                    urlparse("http://1.1.1.1"),
+                    urlparse("http://1.2.3.4/abc/e?q=1#frag"),
+                    urlparse(""),
+                    urlparse("https://1.1.1.1.edu"),
+                ]
+            ),
+            2,
+        )
+        self.assertEqual(count_ip_addresses([]), 0)
 
     def test_email_domain_matches_url(self):
         self.assertTrue(
