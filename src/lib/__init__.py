@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
-from typing import Callable, Iterable, TypeVar, cast
 
 from joblib import Parallel, delayed
+from typing_extensions import Callable, Iterable, TypeVar, cast
 
 PROJECT_ROOT = Path(os.path.realpath(__file__)).parents[2]
 

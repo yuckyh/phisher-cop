@@ -5,10 +5,10 @@ import shutil
 import zipfile
 from enum import Enum
 from pathlib import Path
-from typing import TypeAlias
 
 import numpy as np
 from numpy.typing import NDArray
+from typing_extensions import TypeAlias
 
 from . import PROJECT_ROOT
 from .email import Email, email_from_file
