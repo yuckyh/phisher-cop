@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from functools import lru_cache
 
 from typing_extensions import Callable, Iterable
 
@@ -20,6 +19,7 @@ class BKTree:
     ):
         """
         Create a BK-tree with the given `distance_fn` and initial `items`.
+        `distance_fn(a, a)` must return `0` for all strings `a`.
 
         Time complexity: `O(n * log(n) * O(distance_fn))` on average, `O(n^2 * O(distance_fn))` in the worst case.
         Space complexity: `O(n)`
@@ -27,6 +27,7 @@ class BKTree:
         Where `n = len(items)`.
         """
         self.root: BKTreeNode | None = None
+        self.items: set[str] = set()
         self.distance_fn = distance_fn
         for s in items:
             self.insert(s)
@@ -40,6 +41,11 @@ class BKTree:
 
         Where `n` is the number of items in the tree.
         """
+        # Item is already in the tree
+        if item in self.items:
+            return
+
+        self.items.add(item)
         if self.root is None:
             self.root = BKTreeNode(label=item, children={})
             return
@@ -56,9 +62,8 @@ class BKTree:
 
             # No child with this distance, so we insert the item and finish
             parent.children[distance] = BKTreeNode(label=item, children={})
-            return
+            break
 
-    @lru_cache(maxsize=1000)
     def contains_max_distance(self, item: str, max_distance: int) -> bool:
         """
         Check if the tree contains an item with distance at most `max_distance` from `item`.
@@ -91,8 +96,8 @@ class BKTree:
 
         return False
 
-    def __repr__(self) -> str:
-        return f"BKTree(root={self.root},distance_fn={self.distance_fn})"  # pragma: no cover
+    def __repr__(self) -> str:  # pragma: no cover
+        return f"BKTree(root={self.root},distance_fn={self.distance_fn})"
 
 
 def levenshtein_distance(s1: str, s2: str) -> int:
