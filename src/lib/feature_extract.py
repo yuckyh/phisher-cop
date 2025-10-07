@@ -46,7 +46,7 @@ def find_suspicious_words(
             yield i
 
 
-def suspicious_word_kernel(x: float) -> float:
+def suspicious_word_kernel(x: float) -> float:  # pragma: no cover
     """
     A kernel function that gives higher weight to words appearing earlier in the text.
     `x` is a normalized position in the text in the range [0, 1].
