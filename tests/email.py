@@ -6,10 +6,13 @@ from tempfile import TemporaryDirectory
 from urllib.parse import urlparse
 
 from src.lib.email import (
+    Email,
+    PreprocessedEmail,
     email_from_file,
     email_from_input,
     get_email_addresses,
     payload_dom,
+    preprocess_email,
     raw_payload,
     tokenize_payload,
     words_from_tokens,
@@ -18,6 +21,55 @@ from src.lib.email_address import parse_email_address
 
 
 class TestEmail(unittest.TestCase):
+    def test_preprocess_email(self):
+        expected = PreprocessedEmail(
+            urls=set(),
+            tokens=["Hello,", "world!"],
+            words=["Hello", "world"],
+            sender=None,
+            addresses=[
+                parse_email_address("someone@gov.com"),
+                parse_email_address("not-scammer@.phishi.ng"),
+            ],
+            domains=[],
+        )
+        actual = preprocess_email(
+            email_from_input(
+                sender="Mail Delivery Subsystem <@example.com>",
+                subject="Undelivered Mail Returned to Sender",
+                payload="Hello, world!",
+                cc="someone@gov.com, not-scammer@.phishi.ng",
+            ),
+            ignore_errors=True,
+        )
+        self.assertEqual(actual, expected)
+
+        self.assertRaises(
+            ValueError,
+            lambda: preprocess_email(
+                email_from_input(
+                    sender="Mail Delivery Subsystem <@example.com>",
+                    subject="Undelivered Mail Returned to Sender",
+                    payload="Hello, world!",
+                    cc="someone@gov.com, not-scammer@.phishi.ng",
+                ),
+                ignore_errors=False,
+            ),
+        )
+
+        self.assertRaises(
+            ValueError,
+            lambda: preprocess_email(
+                email_from_input(
+                    sender="Mail Delivery Subsystem <postmaster@example.com>",
+                    subject="Undelivered Mail Returned to Sender",
+                    payload="Hello, world!",
+                    cc="someone@gov.com, @.phishi.ng",
+                ),
+                ignore_errors=False,
+            ),
+        )
+
     def test_email_from_file(self):
         expected_from = "Mail Delivery Subsystem <postmaster@example.com>"
         expected_content_type = "text/plain"
@@ -45,6 +97,17 @@ class TestEmail(unittest.TestCase):
         self.assertEqual(email.get_content_charset(), expected_charset)
         self.assertEqual(email["Subject"], expected_subject)
         self.assertEqual(email.get_payload(), expected_payload)
+
+    def test_email_from_input(self):
+        self.assertRaises(
+            ValueError,
+            lambda: email_from_input(
+                sender="",
+                subject="hi",
+                payload="test",
+                cc="a@b.com",
+            ),
+        )
 
     def test_raw_payload(self):
         expected_payload_plain = (
@@ -101,6 +164,8 @@ class TestEmail(unittest.TestCase):
             raw_payload(email), f"{expected_payload_plain}\n{expected_payload_html}"
         )
 
+        self.assertEqual(raw_payload(Email()), "")
+
     def test_payload_dom(self):
         with TemporaryDirectory() as tmpdir:
             filepath = os.path.join(tmpdir, "test_mail.txt")
@@ -154,6 +219,32 @@ class TestEmail(unittest.TestCase):
         ]
         actual = get_email_addresses(email, False)
         self.assertListEqual(actual, expected)
+
+    def test_tokenize_payload(self):
+        email = Email()
+        email.set_payload(
+            "Hello,   I am under the-water. Visit https://example.com or http://test.com!"
+        )
+        email["Content-Type"] = "text/plain; charset=utf-8"
+        expected_urls = {
+            urlparse("https://example.com"),
+            urlparse("http://test.com!"),
+        }
+        expected_tokens = [
+            "Hello,",
+            "I",
+            "am",
+            "under",
+            "the-water.",
+            "Visit",
+            # "https://example.com",
+            "or",
+            # "http://test.com!",
+        ]
+
+        actual_urls, actual_tokens = tokenize_payload(email)
+        self.assertSetEqual(actual_urls, expected_urls)
+        self.assertListEqual(actual_tokens, expected_tokens)
 
     def test_words_from_tokens(self):
         with TemporaryDirectory() as tmpdir:

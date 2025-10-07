@@ -18,11 +18,8 @@ class EmailAddress:
 ADDRESS_PATTERN = re.compile(r"(([^@+]*)\+)?([^@]+)@([^@]+)")
 
 
-def parse_email_address(address: str | None) -> EmailAddress:
+def parse_email_address(address: str) -> EmailAddress:
     """Parse an email address into its components."""
-    if not isinstance(address, str):
-        raise ValueError(f"Invalid email address: {address}")
-
     _, email_address = parseaddr(address)
 
     if not email_address:

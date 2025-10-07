@@ -30,7 +30,7 @@ def preprocess_email(email: Email, ignore_errors: bool = True) -> PreprocessedEm
     urls, tokens = tokenize_payload(email)
     words = words_from_tokens(tokens)
     try:
-        sender = parse_email_address(email["From"])
+        sender = parse_email_address(email["From"] or "")
     except ValueError as e:
         if not ignore_errors:
             raise e
@@ -76,21 +76,19 @@ def decode_payload(email: Email) -> str:
     payload = email.get_payload(decode=True)
     if payload is None:
         return ""
-    if isinstance(payload, bytes):
-        # The payload is in some form of bytes, decode it using the email's charset
-        content_charset = (
-            (email.get_content_charset() or "utf-8")
-            .removesuffix("_charset")
-            .replace("chinesebig5", "big5")
-            .replace("default", "utf-8")
-        )
-        return payload.decode(
-            encoding=content_charset,
-            errors="replace",
-        )
-    if isinstance(payload, str):
-        return payload
-    return str(payload)
+
+    assert isinstance(payload, bytes)
+    # The payload is in some form of bytes, decode it using the email's charset
+    content_charset = (
+        (email.get_content_charset() or "utf-8")
+        .removesuffix("_charset")
+        .replace("chinesebig5", "big5")
+        .replace("default", "utf-8")
+    )
+    return payload.decode(
+        encoding=content_charset,
+        errors="replace",
+    )
 
 
 def remove_payload_quotes(payload: str) -> str:
@@ -204,9 +202,6 @@ def tokenize_payload(email: Email) -> tuple[set[Url], list[str]]:
         tokens = raw_dom_tokens(dom_payload)
         anchor_url_set = anchor_urls(dom_payload)
 
-    for token in tokens:
-        if not isinstance(token, str):
-            raise ValueError("Token is not a string: " + repr(token))
     urls, non_url_tokens = token_urls(tokens)
     urls |= anchor_url_set
 
