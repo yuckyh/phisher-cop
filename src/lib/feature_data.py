@@ -8,6 +8,10 @@ SUSPICIOUS_WORDS = os.path.join(BASE_DIR, "suspicious_words.txt")
 
 
 def load_lines_as_set(filepath: str, lower: bool) -> set[str]:
+    """
+    Load the lines of a file into a set, stripping whitespace and optionally converting to lowercase.
+    Lines that become empty after stripping are ignored.
+    """
     with open(filepath, "r") as f:
         return {
             stripped.lower() if lower else stripped

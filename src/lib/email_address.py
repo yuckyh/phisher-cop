@@ -26,9 +26,7 @@ def parse_email_address(address: str | None) -> EmailAddress:
     _, email_address = parseaddr(address)
 
     if not email_address:
-        return EmailAddress(
-            username="", alias="", domain=Domain(subdomain="", domain_name="", tld="")
-        )
+        raise ValueError(f"Invalid email address: {address}")
 
     match = ADDRESS_PATTERN.fullmatch(email_address)
     if not match:

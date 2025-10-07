@@ -21,7 +21,7 @@ class PreprocessedEmail:
     urls: set[Url]
     tokens: list[str]
     words: list[str]
-    sender: EmailAddress
+    sender: EmailAddress | None
     addresses: list[EmailAddress]
     domains: list[Domain]
 
@@ -34,7 +34,7 @@ def preprocess_email(email: Email, ignore_errors: bool = True) -> PreprocessedEm
     except ValueError as e:
         if not ignore_errors:
             raise e
-        sender = EmailAddress(username="", alias="", domain=Domain("", "", ""))
+        sender = None
     addresses = get_email_addresses(email, ignore_errors)
     domains = domains_from_urls(urls)
     return PreprocessedEmail(
