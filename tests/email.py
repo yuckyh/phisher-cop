@@ -44,9 +44,8 @@ class TestEmail(unittest.TestCase):
         )
         self.assertEqual(actual, expected)
 
-        self.assertRaises(
-            ValueError,
-            lambda: preprocess_email(
+        with self.assertRaises(ValueError):
+            preprocess_email(
                 email_from_input(
                     sender="Mail Delivery Subsystem <@example.com>",
                     subject="Undelivered Mail Returned to Sender",
@@ -54,12 +53,10 @@ class TestEmail(unittest.TestCase):
                     cc="someone@gov.com, not-scammer@.phishi.ng",
                 ),
                 ignore_errors=False,
-            ),
-        )
+            )
 
-        self.assertRaises(
-            ValueError,
-            lambda: preprocess_email(
+        with self.assertRaises(ValueError):
+            preprocess_email(
                 email_from_input(
                     sender="Mail Delivery Subsystem <postmaster@example.com>",
                     subject="Undelivered Mail Returned to Sender",
@@ -67,8 +64,7 @@ class TestEmail(unittest.TestCase):
                     cc="someone@gov.com, @.phishi.ng",
                 ),
                 ignore_errors=False,
-            ),
-        )
+            )
 
     def test_email_from_file(self):
         expected_from = "Mail Delivery Subsystem <postmaster@example.com>"
@@ -99,15 +95,13 @@ class TestEmail(unittest.TestCase):
         self.assertEqual(email.get_payload(), expected_payload)
 
     def test_email_from_input(self):
-        self.assertRaises(
-            ValueError,
-            lambda: email_from_input(
+        with self.assertRaises(ValueError):
+            email_from_input(
                 sender="",
                 subject="hi",
                 payload="test",
                 cc="a@b.com",
-            ),
-        )
+            )
 
     def test_raw_payload(self):
         expected_payload_plain = (
