@@ -206,7 +206,9 @@ def tokenize_payload(email: Email) -> tuple[set[Url], list[str]]:
 
     for token in tokens:
         if not isinstance(token, str):
-            raise ValueError("Token is not a string: " + repr(token))
+            raise ValueError(
+                "Token is not a string: " + repr(token)
+            )  # pragma: no cover
     urls, non_url_tokens = token_urls(tokens)
     urls |= anchor_url_set
 
