@@ -34,6 +34,7 @@ def find_suspicious_words(
 ) -> Iterator[int]:
     """
     Scans the `words` for suspicious keywords and returns the index of each keyword found.
+    For performance reasons, all words in `suspicious_words` must be lowercase.
 
     Time complexity: `O(n)` where `n` is the number of words.
     Space complexity: `O(1)`.
@@ -119,7 +120,8 @@ def count_ip_addresses(urls: Iterable[Url]) -> int:
 
 
 def email_domain_matches_url(
-    email_address: EmailAddress, url_domains: list[Domain]
+    email_address: EmailAddress | None,
+    url_domains: list[Domain],
 ) -> bool:
     """Check if the email domain matches any of the given URL domains."""
     if email_address is None:
