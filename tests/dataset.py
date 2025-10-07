@@ -1,8 +1,15 @@
 import os
 import unittest
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from src.lib.dataset import hash_dir, hash_file, split_dir
+from src.lib.dataset import (
+    hash_dir,
+    hash_file,
+    load_split,
+    split_dir,
+    unzip,
+)
 
 
 class TestDataset(unittest.TestCase):
@@ -59,3 +66,26 @@ class TestDataset(unittest.TestCase):
             for split in splits:
                 all_files.update(split)
             self.assertEqual(len(all_files), 10)
+
+    def test_load_split(self):
+        dir = Path(os.path.realpath(__file__)).parent
+        with TemporaryDirectory() as tmpdir:
+            with self.assertRaises(Exception):
+                unzip(
+                    os.path.join(dir, "data-split.zip"),
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    tmpdir,
+                )
+
+            unzip(
+                os.path.join(dir, "data-split.zip"),
+                "6cf7d664055b5a999f8552c57689062e9b8ce7b1ac8d600b37252bf36ba14920",
+                tmpdir,
+            )
+
+            emails, labels = load_split(tmpdir)
+            self.assertEqual(len(emails), 7)
+            self.assertListEqual(
+                labels.tolist(),
+                [0, 0, 0, 0, 1, 1, 1],
+            )

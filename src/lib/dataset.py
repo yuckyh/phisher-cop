@@ -91,10 +91,6 @@ def split_dir(dir_path: str, splits: list[float]) -> list[list[str]]:
 
 def unzip(zip_path: str, zip_hash_expected: str, out_dir: str):
     """Unzip the dataset to `out_dir`."""
-    if not os.path.exists(zip_path):
-        raise Exception(
-            f"Missing {zip_path}, please download it from Kaggle:\n  https://www.kaggle.com/datasets/beatoa/spamassassin-public-corpus"
-        )
     if hash_file(zip_path) != zip_hash_expected:
         raise Exception(f"Corrupted {zip_path}, please re-download it")
 
@@ -162,6 +158,11 @@ def load_data() -> tuple[DataSplit, DataSplit]:  # pragma: no cover
     # Data is missing or corrupted, we need to unzip and prepare it first
     if not os.path.exists(DATA_DIR) or hash_dir(DATA_DIR) != DATA_HASH_EXPECTED:
         random.seed(9912629)  # Fixed seed needed for directory hash to work
+        if not os.path.exists(ZIP_PATH):
+            raise Exception(
+                f"Missing {ZIP_PATH}, please download it from Kaggle:\n"
+                "  https://www.kaggle.com/datasets/beatoa/spamassassin-public-corpus"
+            )
         unzip(ZIP_PATH, ZIP_HASH_EXPECTED, DATA_DIR)
         restructure_splits(DATA_DIR, SPLITS)
         assert hash_dir(DATA_DIR) == DATA_HASH_EXPECTED, (
