@@ -141,7 +141,7 @@ def capital_words_ratio(words: list[str]) -> float:
     return sum(
         1  # This comment is to force the fomatter to keep this on multiple lines
         for word in words
-        if all(c.isupper() for c in word)
+        if word.isalpha() and word.isupper()
     ) / max(1, len(words))
 
 
