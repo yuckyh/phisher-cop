@@ -145,7 +145,7 @@ def email_domain_matches_url(
 def capital_words_ratio(words: list[str]) -> float:
     """Returns the ratio of words in all caps to those that are not."""
     return sum(
-        1  # This comment is to force the fomatter to keep this on multiple lines
+        1  # This comment is to force the formatter to keep this on multiple lines
         for word in words
         if word.isalpha() and word.isupper()
     ) / max(1, len(words))
@@ -158,7 +158,7 @@ MONEY_PATTERN = re.compile(r"[$€£]\d+")
 def money_tokens_ratio(tokens: list[str]) -> float:
     """Returns the ratio of tokens that represent money amounts to those that do not."""
     return sum(
-        1  # This comment is to force the fomatter to keep this on multiple lines
+        1  # This comment is to force the formatter to keep this on multiple lines
         for token in tokens
         if MONEY_PATTERN.match(token)
     ) / max(1, len(tokens))
