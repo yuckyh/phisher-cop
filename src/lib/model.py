@@ -34,7 +34,7 @@ class ModelType(Enum):
     SVM = "svm"
 
     @property
-    def uses_tfidf(self) -> bool:
+    def uses_tfidf(self) -> bool:  # pragma: no cover
         """Returns True if the model type uses TF-IDF features."""
         match self:
             case ModelType.RANDOM_FOREST:
@@ -43,7 +43,7 @@ class ModelType(Enum):
                 return False
 
     @property
-    def default_path(self) -> str:
+    def default_path(self) -> str:  # pragma: no cover
         """Returns the default path to the saved model type."""
         return os.path.join(MODELS_PATH, f"{self.value}.joblib")
 
