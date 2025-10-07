@@ -153,7 +153,7 @@ class TestEmail(unittest.TestCase):
             parse_email_address("not-scammer@.phishi.ng"),
         ]
         actual = get_email_addresses(email, False)
-        self.assertEqual(actual, expected)
+        self.assertListEqual(actual, expected)
 
     def test_words_from_tokens(self):
         with TemporaryDirectory() as tmpdir:
@@ -200,6 +200,6 @@ class TestEmail(unittest.TestCase):
             "click",
             "me",
         ]
-        self.assertEqual(urls, expected_urls)
-        self.assertEqual(tokens, expected_tokens)
-        self.assertEqual(words, expected_words)
+        self.assertSetEqual(urls, expected_urls)
+        self.assertListEqual(tokens, expected_tokens)
+        self.assertListEqual(words, expected_words)

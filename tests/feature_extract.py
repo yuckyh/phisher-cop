@@ -24,19 +24,19 @@ class TestFeatureExtract(unittest.TestCase):
     def test_find_suspicious_words(self):
         actual = list(find_suspicious_words(["hi", "HoW", "are", "yOU"], {"hi", "you"}))
         expected = [0, 3]
-        self.assertEqual(actual, expected)
+        self.assertListEqual(actual, expected)
 
         actual = list(find_suspicious_words(["hi", "HoW", "are", "yOU"], {"free"}))
         expected = []
-        self.assertEqual(actual, expected)
+        self.assertListEqual(actual, expected)
 
         actual = list(find_suspicious_words([], {"hi", "you"}))
         expected = []
-        self.assertEqual(actual, expected)
+        self.assertListEqual(actual, expected)
 
         actual = list(find_suspicious_words(["hi", "HoW", "are", "yOU"], set()))
         expected = []
-        self.assertEqual(actual, expected)
+        self.assertListEqual(actual, expected)
 
     def test_score_suspicious_words(self):
         self.assertAlmostEqual(
