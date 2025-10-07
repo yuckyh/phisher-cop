@@ -104,7 +104,9 @@ def unzip(zip_path: str, zip_hash_expected: str, out_dir: str):
         zip_ref.extractall(out_dir)
 
 
-def restructure_splits(out_dir: str, splits: list[float]):
+# There are no unit tests for this function as it is specific to our exact dataset,
+# so the only sensible test is to check the final hash of the data directory.
+def restructure_splits(out_dir: str, splits: list[float]):  # pragma: no cover
     """Restructure the unzipped data into train/test splits."""
     assert len(splits) == 2
 
@@ -149,7 +151,8 @@ def load_split(split_dir: str) -> DataSplit:
     return emails, np.array(labels, dtype=np.uint8)
 
 
-def load_data() -> tuple[DataSplit, DataSplit]:
+# There are no unit tests for this function as it is specific to our exact dataset
+def load_data() -> tuple[DataSplit, DataSplit]:  # pragma: no cover
     """
     Load the dataset from the disk, unzipping and preparing it if necessary.
     Before running, download the dataset and place it in this project's root directory as `archive.zip`:
