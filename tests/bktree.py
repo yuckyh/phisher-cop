@@ -29,6 +29,10 @@ class TestBKTree(unittest.TestCase):
         tree.insert("hallo")
         self.assertIn(1, tree.root.children)
         self.assertEqual(tree.root.children[1].label, "hallo")
+        self.assertEqual(len(tree.items), 2)
+
+        tree.insert("hallo")
+        self.assertEqual(len(tree.items), 2)
 
         tree.insert("hell")
         self.assertIn(1, tree.root.children)
