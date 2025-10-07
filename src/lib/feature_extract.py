@@ -2,7 +2,7 @@ import re
 from functools import lru_cache
 from ipaddress import ip_address
 
-from typing_extensions import Iterable, Iterator
+from typing_extensions import Callable, Iterable, Iterator
 
 from .bktree import BKTree, levenshtein_distance
 from .domain import Domain, Url
@@ -56,7 +56,11 @@ def suspicious_word_kernel(x: float) -> float:
     return 2 - x
 
 
-def score_suspicious_words(words: list[str], suspicious_words: set[str]) -> float:
+def score_suspicious_words(
+    words: list[str],
+    suspicious_words: set[str],
+    kernel: Callable[[float], float] = suspicious_word_kernel,
+) -> float:
     """
     Score the suspicious words in the given list of words.
     Higher scores are given to suspicious words that appear earlier in the list.
@@ -69,7 +73,7 @@ def score_suspicious_words(words: list[str], suspicious_words: set[str]) -> floa
         x = index / end  # Normalize to [0, 1]
         # y is 1 when this is a suspicious word, and 0 otherwise.
         # Since anything multiplied by 0 is 0, we can skip non-suspicious words.
-        y = suspicious_word_kernel(x)
+        y = kernel(x)
         # We need to multiply y by the step size 1 / len(words),
         # but it's more efficient to do it once at the end.
         score += y

@@ -11,7 +11,13 @@ from src.lib.feature_extract import (
     is_ip_address,
     is_typosquatted_domain,
     money_tokens_ratio,
+    score_suspicious_words,
 )
+
+
+def test_kernel(x: float) -> float:
+    """Returns `2 - x^2`."""
+    return 2 - (x * x)
 
 
 class TestFeatureExtract(unittest.TestCase):
@@ -31,6 +37,43 @@ class TestFeatureExtract(unittest.TestCase):
         actual = list(find_suspicious_words(["hi", "HoW", "are", "yOU"], set()))
         expected = []
         self.assertEqual(actual, expected)
+
+    def test_score_suspicious_words(self):
+        self.assertAlmostEqual(
+            score_suspicious_words(["hi"], {"hi", "you"}, test_kernel),
+            2.0,
+        )
+        self.assertAlmostEqual(
+            score_suspicious_words(["hi", "HoW", "are", "yOU"], set(), test_kernel),
+            0.0,
+        )
+        self.assertAlmostEqual(
+            score_suspicious_words([], {"hi"}, test_kernel),
+            0.0,
+        )
+        self.assertAlmostEqual(
+            score_suspicious_words(
+                ["hi", "HoW", "are", "yOU"],
+                {"hi", "you"},
+                test_kernel,
+            ),
+            0.75,
+        )
+
+        # This function should be invariant under input size
+        self.assertAlmostEqual(
+            score_suspicious_words(
+                (["hi"] * 1000) + (["bye"] * 1000),
+                {"hi"},
+                test_kernel,
+            ),
+            score_suspicious_words(
+                (["hi"] * 10_000) + (["bye"] * 10_000),
+                {"hi"},
+                test_kernel,
+            ),
+            places=3,
+        )
 
     def test_is_typosquatted_domain(self):
         tree = BKTree(levenshtein_distance, ["example.com", "test.com", "sample.org"])
