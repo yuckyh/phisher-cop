@@ -13,6 +13,9 @@ from . import PROJECT_ROOT
 from .dataset import Label
 from .email import Email, PreprocessedEmail, preprocess_email
 from .feature_extract import (
+    SAFE_DOMAIN_TREE,
+    SAFE_DOMAINS,
+    SUSPICIOUS_WORDS,
     capital_words_ratio,
     count_ip_addresses,
     count_typosquatted_domains,
@@ -145,9 +148,15 @@ def extract_features(
 ) -> list[float | str]:
     """Extracts features used by the model type from the preprocessed email."""
     common_features: list[float | str] = [
-        float(count_whitelisted_addresses(email.addresses)),
-        score_suspicious_words(email.words),
-        float(count_typosquatted_domains(email.domains, edit_threshold=1)),
+        float(count_whitelisted_addresses(email.addresses, SAFE_DOMAINS)),
+        score_suspicious_words(email.words, SUSPICIOUS_WORDS),
+        float(
+            count_typosquatted_domains(
+                email.domains,
+                SAFE_DOMAIN_TREE,
+                edit_threshold=1,
+            )
+        ),
         float(count_ip_addresses(email.urls)),
         1.0 if email_domain_matches_url(email.sender, email.domains) else 0.0,
         capital_words_ratio(email.words),

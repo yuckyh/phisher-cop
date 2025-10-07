@@ -1,4 +1,5 @@
 import re
+from functools import lru_cache
 from ipaddress import ip_address
 
 from typing_extensions import Iterable, Iterator
@@ -14,17 +15,23 @@ SAFE_DOMAIN_TREE = BKTree(levenshtein_distance, SAFE_DOMAINS)
 SUSPICIOUS_WORDS = load_suspicious_words()
 
 
-def count_whitelisted_addresses(emails: Iterable[EmailAddress]) -> int:
+def count_whitelisted_addresses(
+    emails: Iterable[EmailAddress],
+    safe_domains: set[str],
+) -> int:
     """
     Count how many email addresses are from a whitelisted domain.
 
     Time complexity: `O(n)` where `n` is the number of email addresses.
     Space complexity: `O(1)`.
     """
-    return sum(1 for email in emails if email.domain.host in SAFE_DOMAINS)
+    return sum(1 for email in emails if email.domain.host in safe_domains)
 
 
-def find_suspicious_words(words: Iterable[str]) -> Iterator[int]:
+def find_suspicious_words(
+    words: Iterable[str],
+    suspicious_words: set[str],
+) -> Iterator[int]:
     """
     Scans the `words` for suspicious keywords and returns the index of each keyword found.
 
@@ -32,7 +39,7 @@ def find_suspicious_words(words: Iterable[str]) -> Iterator[int]:
     Space complexity: `O(1)`.
     """
     for i, word in enumerate(words):
-        if word.lower() in SUSPICIOUS_WORDS:
+        if word.lower() in suspicious_words:
             # Use a generator to reduce memory usage,
             # as this list is only used once to calculate a score.
             yield i
@@ -48,7 +55,7 @@ def suspicious_word_kernel(x: float) -> float:
     return 2 - x
 
 
-def score_suspicious_words(words: list[str]) -> float:
+def score_suspicious_words(words: list[str], suspicious_words: set[str]) -> float:
     """
     Score the suspicious words in the given list of words.
     Higher scores are given to suspicious words that appear earlier in the list.
@@ -57,7 +64,7 @@ def score_suspicious_words(words: list[str]) -> float:
     end = max(1, len(words) - 1)
     score = 0.0
     # Multiply y by the kernel and then integrate to get the score
-    for index in find_suspicious_words(words):
+    for index in find_suspicious_words(words, suspicious_words):
         x = index / end  # Normalize to [0, 1]
         # y is 1 when this is a suspicious word, and 0 otherwise.
         # Since anything multiplied by 0 is 0, we can skip non-suspicious words.
@@ -69,16 +76,29 @@ def score_suspicious_words(words: list[str]) -> float:
     return score / max(1, len(words))
 
 
+@lru_cache(maxsize=1000)
+def is_typosquatted_domain(
+    domain_host: str,
+    safe_domain_tree: BKTree,
+    edit_threshold: int,
+) -> bool:
+    """Check if the domain is a likely typosquatted version of a safe domain."""
+    return (
+        domain_host not in safe_domain_tree.items
+        and safe_domain_tree.contains_max_distance(domain_host, edit_threshold)
+    )
+
+
 def count_typosquatted_domains(
     domains: Iterable[Domain],
+    safe_domain_tree: BKTree,
     edit_threshold: int,
 ) -> int:
     """Count the number of domains that are likely typosquatted versions of popular domains."""
     return sum(
         1
         for domain in domains
-        if domain.host not in SAFE_DOMAINS
-        and SAFE_DOMAIN_TREE.contains_max_distance(domain.host, edit_threshold)
+        if is_typosquatted_domain(domain.host, safe_domain_tree, edit_threshold)
     )
 
 
@@ -98,7 +118,6 @@ def count_ip_addresses(urls: Iterable[Url]) -> int:
     return sum(1 for url in urls if is_ip_address(url))
 
 
-# def sender_domain_matches_url(email: Email, url_domains: list[Domain]) -> bool:
 def email_domain_matches_url(
     email_address: EmailAddress, url_domains: list[Domain]
 ) -> bool:
@@ -119,9 +138,11 @@ def email_domain_matches_url(
 
 def capital_words_ratio(words: list[str]) -> float:
     """Returns the ratio of words in all caps to those that are not."""
-    return sum(1 for word in words if all(c.isupper() for c in word)) / max(
-        1, len(words)
-    )
+    return sum(
+        1  # This comment is to force the fomatter to keep this on multiple lines
+        for word in words
+        if all(c.isupper() for c in word)
+    ) / max(1, len(words))
 
 
 # Define this outside the function to avoid recompiling the regex on each call.
@@ -130,6 +151,8 @@ MONEY_PATTERN = re.compile(r"[$€£]\d+")
 
 def money_tokens_ratio(tokens: list[str]) -> float:
     """Returns the ratio of tokens that represent money amounts to those that do not."""
-    return sum(1 for token in tokens if MONEY_PATTERN.match(token)) / max(
-        1, len(tokens)
-    )
+    return sum(
+        1  # This comment is to force the fomatter to keep this on multiple lines
+        for token in tokens
+        if MONEY_PATTERN.match(token)
+    ) / max(1, len(tokens))
