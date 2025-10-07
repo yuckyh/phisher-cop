@@ -6,7 +6,7 @@ from src.lib import parallelize
 from .bktree import TestBKTree, TestLevenshteinDistance  # noqa: F401
 from .dataset import TestDataset  # noqa: F401
 from .domain import TestDomain  # noqa: F401
-from .email import TestDocument  # noqa: F401
+from .email import TestEmail  # noqa: F401
 from .feature_extract import TestFeatureExtract  # noqa: F401
 
 

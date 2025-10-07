@@ -7,14 +7,17 @@ from urllib.parse import urlparse
 
 from src.lib.email import (
     email_from_file,
+    email_from_input,
+    get_email_addresses,
     payload_dom,
     raw_payload,
     tokenize_payload,
     words_from_tokens,
 )
+from src.lib.email_address import parse_email_address
 
 
-class TestDocument(unittest.TestCase):
+class TestEmail(unittest.TestCase):
     def test_email_from_file(self):
         expected_from = "Mail Delivery Subsystem <postmaster@example.com>"
         expected_content_type = "text/plain"
@@ -135,29 +138,57 @@ class TestDocument(unittest.TestCase):
         actual = payload_dom(email).prettify()
         self.assertEqual(actual, expected)
 
+    def test_get_email_addresses(self):
+        email = email_from_input(
+            sender="Mail Delivery Subsystem <postmaster@example.com>",
+            subject="hi",
+            payload="test",
+            cc="someone@gov.com, not-scammer@.phishi.ng",
+        )
+        expected = [
+            parse_email_address("postmaster@example.com"),
+            # 'To' addresses are not included
+            # parse_email_address("recipient@example.com"),
+            parse_email_address("someone@gov.com"),
+            parse_email_address("not-scammer@.phishi.ng"),
+        ]
+        actual = get_email_addresses(email, False)
+        self.assertEqual(actual, expected)
+
     def test_words_from_tokens(self):
         with TemporaryDirectory() as tmpdir:
-            with open(os.path.join(tmpdir, "test_mail.txt"), "w") as f:
+            filepath = os.path.join(tmpdir, "test_mail.txt")
+            with open(filepath, "w") as f:
                 f.write(
                     "From: Mail Delivery Subsystem <postmaster@example.com>\r\n"
                     "To: recipient@example.com\r\n"
                     "Subject: Undelivered Mail Returned to Sender\r\n"
                     "content-type: text/html; charset=utf-8\r\n"
                     "\r\n"
-                    "Hello,   I am under the-water\r\n"
-                    "http://under.the-water.com\r\n"
+                    "<html>\r\n"
+                    "    <body>\r\n"
+                    "        <p>Hello,   I am under the-water</p>\r\n"
+                    "        <a href='http://defo.scam.com'>https://not.scam.com <- click me!</a>\r\n"
+                    "    </body>\r\n"
+                    "</html>\r\n"
                 )
-            email = email_from_file(os.path.join(tmpdir, "test_mail.txt"))
+            email = email_from_file(filepath)
 
         urls, tokens = tokenize_payload(email)
         words = words_from_tokens(tokens)
-        expected_urls = {urlparse("http://under.the-water.com")}
+        expected_urls = {
+            urlparse("http://defo.scam.com"),
+            urlparse("https://not.scam.com"),
+        }
         expected_tokens = [
             "Hello,",
             "I",
             "am",
             "under",
             "the-water",
+            "<-",
+            "click",
+            "me!",
         ]
         expected_words = [
             "Hello",
@@ -166,6 +197,8 @@ class TestDocument(unittest.TestCase):
             "under",
             "the",
             "water",
+            "click",
+            "me",
         ]
         self.assertEqual(urls, expected_urls)
         self.assertEqual(tokens, expected_tokens)
