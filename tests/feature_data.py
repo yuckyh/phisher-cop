@@ -23,4 +23,4 @@ class TestFeatureData(unittest.TestCase):
                 )
             actual = load_lines_as_set(filepath, lower=True)
         expected = {"hello", "world"}
-        self.assertEqual(actual, expected)
+        self.assertSetEqual(actual, expected)
