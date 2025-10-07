@@ -2,10 +2,21 @@ import os
 import unittest
 from tempfile import TemporaryDirectory
 
-from src.lib.dataset import hash_dir, split_dir
+from src.lib.dataset import hash_dir, hash_file, split_dir
 
 
 class TestDataset(unittest.TestCase):
+    def test_hash_file(self):
+        with TemporaryDirectory() as tmpdir:
+            tmpfile_path = os.path.join(tmpdir, "test.txt")
+            with open(tmpfile_path, "w") as f:
+                f.write("Hello, world!")
+            expected = (
+                "315f5bdb76d078c43b8ac0064e4a0164612b1fce77c869345bfc94c75894edd3"
+            )
+            actual = hash_file(tmpfile_path)
+            self.assertEqual(actual, expected)
+
     def test_hash_dir(self):
         with TemporaryDirectory() as tmpdir:
             with open(os.path.join(tmpdir, "file1.txt"), "w") as f:
