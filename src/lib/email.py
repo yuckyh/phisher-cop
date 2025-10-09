@@ -240,7 +240,7 @@ def get_email_addresses(email: Email, ignore_errors: bool) -> list[EmailAddress]
     return addresses
 
 
-def normalize_url(rawUrl: str) -> Url:
+def normalize_url(raw_url: str) -> Url:
     """
     Normalize a URL for consistent comparison and analysis.
 
@@ -254,7 +254,7 @@ def normalize_url(rawUrl: str) -> Url:
     in phishing detection.
 
     Args:
-        rawUrl: The raw URL string to normalize
+        raw_url: The raw URL string to normalize
 
     Returns:
         Url: A normalized URL namedtuple
@@ -272,7 +272,7 @@ def normalize_url(rawUrl: str) -> Url:
     """
     # Lowering must be done before unquoting because capital letters can be percent-encoded
     # Lowering must be done for correct string matching during feature extraction
-    unquoted_url = urllib.parse.unquote(rawUrl.lower())
+    unquoted_url = urllib.parse.unquote(raw_url.lower())
     parsed_url = urllib.parse.urlparse(unquoted_url)
     return Url(
         scheme=parsed_url.scheme,
