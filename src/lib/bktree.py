@@ -33,6 +33,7 @@ class BKTreeNode:
         label: The string stored at this node
         children: Dictionary mapping distances to child nodes
     """
+
     label: str
     children: dict[int, "BKTreeNode"]
 

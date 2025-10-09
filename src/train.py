@@ -49,7 +49,9 @@ from lib.model import (
 )
 
 # Configuration constants
-FORCE_REGENERATE_SUSPICIOUS_WORDS = False  # When True, always regenerate the suspicious words list
+FORCE_REGENERATE_SUSPICIOUS_WORDS = (
+    False  # When True, always regenerate the suspicious words list
+)
 MODEL_TYPE = ModelType.SVM  # The type of model to train (SVM or RANDOM_FOREST)
 MODEL_SEED = 69420  # Random seed for reproducible results
 
@@ -167,7 +169,7 @@ if __name__ == "__main__":
     train_X, test_X = (parallelize(preprocess_email, X) for X in (train_X, test_X))
 
     # Step 3: Generate suspicious words list if needed
-    if FORCE_REGENERATE_SUSPICIOUS_WORDS  or not os.path.exists(SUSPICIOUS_WORDS):
+    if FORCE_REGENERATE_SUSPICIOUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
         generate_suspicious_words([email.words for email in train_X], train_y)
 
     # Step 4: Extract features from preprocessed emails

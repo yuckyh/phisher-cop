@@ -57,11 +57,12 @@ class Label(Enum):
     machine learning models, where 0 represents legitimate emails and 1 represents
     phishing/spam emails.
     """
+
     HAM = 0
     SPAM = 1
 
 
-def update_hash(hash_func: 'hashlib._Hash', file_path: str) -> None:
+def update_hash(hash_func: "hashlib._Hash", file_path: str) -> None:
     """
     Update the given hash function with the contents of a file.
 

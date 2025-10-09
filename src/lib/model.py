@@ -63,7 +63,9 @@ from .feature_extract import (
     score_suspicious_words,
 )
 
-MODELS_PATH = os.path.join(PROJECT_ROOT, "models")  # Path to the directory containing trained model files
+MODELS_PATH = os.path.join(
+    PROJECT_ROOT, "models"
+)  # Path to the directory containing trained model files
 Model = RandomForestClassifier | SVC  # Type alias for supported model types
 
 
@@ -77,6 +79,7 @@ class ModelType(Enum):
     The enum provides helper properties for determining feature requirements
     and default file paths for each model type.
     """
+
     RANDOM_FOREST = "random_forest"
     SVM = "svm"
 
