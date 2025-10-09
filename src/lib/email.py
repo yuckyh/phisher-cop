@@ -173,6 +173,8 @@ def decode_payload(email: Email) -> str:
 
     This function handles decoding email content from various encodings and
     character sets, with special handling for common email encoding issues.
+    It automatically detects the character set from the email headers and
+    applies fixes for common charset naming inconsistencies.
 
     Args:
         email: A non-multipart email message
@@ -182,6 +184,17 @@ def decode_payload(email: Email) -> str:
 
     Raises:
         AssertionError: If the email is multipart or payload is not bytes
+
+    Example:
+        >>> from email.message import Message
+        >>> msg = Message()
+        >>> msg.set_payload(b'Hello, world!')
+        >>> msg['Content-Type'] = 'text/plain; charset=utf-8'
+        >>> print(decode_payload(msg))
+        'Hello, world!'
+        >>> msg.set_payload(b'Caf\xc3\xa9')  # UTF-8 encoded 'Café'
+        >>> print(decode_payload(msg))
+        'Café'
     """
     assert not email.is_multipart()
     # decode=True decodes transfer-encoding (e.g. base64, quoted-printable)
@@ -204,13 +217,49 @@ def decode_payload(email: Email) -> str:
 
 
 def remove_payload_quotes(payload: str) -> str:
-    """Removes common quoting prefixes from email payloads."""
-    # This is a very naive implementation and may not cover all cases.
-    # It only removes '>' characters at the start of lines.
+    """Removes common quoting prefixes from email payloads.
+
+    This is a simple implementation that removes quote indicators ('>')
+    from the beginning of lines in email replies. This is a very naive
+    implementation and may not cover all cases; it only removes '>' characters
+    at the start of lines.
+
+    Args:
+        payload: The email content string to process
+
+    Returns:
+        str: Email content with quote markers removed
+
+    Example:
+        >>> content = "Hello\\n> Original message\\n> Second line"
+        >>> print(remove_payload_quotes(content))
+        Hello
+        Original message
+        Second line
+    """
     return "\n".join(line.lstrip("> ") for line in payload.splitlines())
 
 
 def raw_payload(email: Email) -> str:
+    """Extract and combine all text content from an email.
+
+    This function handles both simple single-part emails and complex
+    multipart emails (like those with HTML and text alternatives).
+    For multipart emails, it extracts all text/plain and text/html
+    parts and combines them.
+
+    Args:
+        email: The email message to extract content from
+
+    Returns:
+        str: The combined textual content of the email
+
+    Example:
+        >>> email_obj = email_from_file("data/test/ham/0001.txt")
+        >>> content = raw_payload(email_obj)
+        >>> print(len(content) > 0)
+        True
+    """
     if not email.is_multipart():
         return decode_payload(email)
 
@@ -223,12 +272,69 @@ def raw_payload(email: Email) -> str:
 
 
 def payload_dom(email: Email) -> BeautifulSoup:
+    """Convert email content into a BeautifulSoup DOM object for parsing.
+
+    This function processes the email content by:
+    1. Extracting the raw textual payload
+    2. Removing quote markers from forwarded/replied content
+    3. Parsing the content into a DOM structure using BeautifulSoup
+
+    The function treats all content as HTML (even plain text), since
+    plain text is a subset of HTML and can be parsed by HTML parsers.
+
+    Args:
+        email: The email message to convert to DOM
+
+    Returns:
+        BeautifulSoup: A parsed DOM representation of the email content
+
+    Example:
+        >>> email_obj = email_from_input(
+        ...     sender="test@example.com",
+        ...     subject="Test",
+        ...     payload="<p>Hello <b>world</b></p>",
+        ...     cc=""
+        ... )
+        >>> dom = payload_dom(email_obj)
+        >>> print(dom.get_text())
+        Hello world
+    """
     # payload is HTML or plain text, but plain text is a subset of HTML
     payload = remove_payload_quotes(raw_payload(email))
     return BeautifulSoup(payload, features="lxml")
 
 
 def get_email_addresses(email: Email, ignore_errors: bool) -> list[EmailAddress]:
+    """Extract and parse all email addresses from the From and Cc fields.
+
+    This function collects all email addresses from the email's From and Cc
+    headers, parses them into structured EmailAddress objects, and handles
+    any parsing errors according to the ignore_errors parameter.
+
+    Args:
+        email: The email message to extract addresses from
+        ignore_errors: If True, silently skip addresses that fail to parse;
+                      if False, raise ValueError for invalid addresses
+
+    Returns:
+        list[EmailAddress]: List of parsed email address objects
+
+    Raises:
+        ValueError: If ignore_errors=False and an invalid address is encountered
+
+    Example:
+        >>> email_obj = email_from_input(
+        ...     sender="john@example.com",
+        ...     subject="Hello",
+        ...     payload="Test",
+        ...     cc="jane@example.com, bob@example.org"
+        ... )
+        >>> addresses = get_email_addresses(email_obj, True)
+        >>> len(addresses)
+        3
+        >>> addresses[0].domain.host
+        'example.com'
+    """
     addresses = []
     values = [value for field in ("From", "Cc") for value in email.get_all(field, [])]
     for real_name, addr in getaddresses(values, strict=False):
@@ -285,7 +391,26 @@ def normalize_url(raw_url: str) -> Url:
 
 
 def anchor_urls(dom: BeautifulSoup) -> set[Url]:
-    """Returns a set of normalized URLs from the href attributes of anchor tags in the document."""
+    """Extract and normalize URLs from anchor tags in HTML content.
+
+    This function finds all anchor (<a>) tags in the BeautifulSoup DOM,
+    extracts their href attributes, normalizes the URLs, and returns
+    only those with valid network locations (domains).
+
+    Args:
+        dom: BeautifulSoup object containing parsed HTML
+
+    Returns:
+        set[Url]: Set of normalized URL objects from href attributes
+
+    Example:
+        >>> from bs4 import BeautifulSoup
+        >>> html = '<a href="http://EXAMPLE.com/path/">Link</a>'
+        >>> dom = BeautifulSoup(html, 'lxml')
+        >>> urls = anchor_urls(dom)
+        >>> list(urls)[0].netloc
+        'example.com'
+    """
     return {
         url
         for anchor in dom.find_all("a", href=True)
@@ -300,8 +425,28 @@ def token_urls(
     raw_tokens: list[str],
 ) -> tuple[set[Url], list[str]]:
     """
-    Iterates through `raw_tokens` and returns a set of normalized URLs and a list of non-URL tokens.
-    The order of non-URL tokens is preserved.
+    Separate URLs from normal text tokens in a list of raw tokens.
+
+    This function iterates through the input tokens, attempts to normalize each one
+    as a URL, and separates them into a set of valid URLs and a list of non-URL tokens.
+    A token is considered a URL if after normalization it has a non-empty network
+    location (domain). The order of non-URL tokens is preserved in the output list.
+
+    Args:
+        raw_tokens: List of string tokens that may contain URLs
+
+    Returns:
+        tuple: A 2-tuple containing:
+            - set[Url]: Set of normalized URL objects found in the tokens
+            - list[str]: List of tokens that were not identified as URLs
+
+    Example:
+        >>> tokens = ["Hello", "http://example.com", "world", "https://test.org/path"]
+        >>> urls, non_urls = token_urls(tokens)
+        >>> len(urls)
+        2
+        >>> non_urls
+        ['Hello', 'world']
     """
     urls = set()
     non_url_tokens = []
@@ -315,11 +460,51 @@ def token_urls(
 
 
 def raw_dom_tokens(dom: BeautifulSoup) -> list[str]:
-    """Returns the whitespace-separated tokens of the document's text content."""
+    """Extract whitespace-separated tokens from the document's text content.
+
+    This function extracts all text content from a BeautifulSoup DOM object,
+    replacing all whitespace with single spaces, then splits the text into
+    tokens at whitespace boundaries.
+
+    Args:
+        dom: BeautifulSoup object containing parsed HTML
+
+    Returns:
+        list[str]: List of token strings extracted from the document
+
+    Example:
+        >>> from bs4 import BeautifulSoup
+        >>> html = '<p>Hello <b>world</b>!</p><div>Test</div>'
+        >>> dom = BeautifulSoup(html, 'lxml')
+        >>> raw_dom_tokens(dom)
+        ['Hello', 'world!', 'Test']
+    """
     return dom.get_text(separator=" ").split()
 
 
 def domains_from_urls(urls: set[Url]) -> list[Domain]:
+    """Extract domain information from a set of URLs.
+
+    This function processes each URL in the provided set and extracts
+    structured domain information, including subdomain, main domain name,
+    and TLD.
+
+    Args:
+        urls: Set of URL objects to extract domains from
+
+    Returns:
+        list[Domain]: List of Domain objects parsed from the URLs
+
+    Example:
+        >>> from urllib.parse import urlparse
+        >>> url1 = urlparse('https://www.example.com/path1')
+        >>> url2 = urlparse('https://blog.example.org/path2')
+        >>> domains = domains_from_urls({url1, url2})
+        >>> len(domains)
+        2
+        >>> sorted([d.host for d in domains])
+        ['example.com', 'example.org']
+    """
     return [parse_domain(url) for url in urls]
 
 

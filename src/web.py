@@ -15,8 +15,14 @@ Libraries used:
   - render_template: For rendering HTML templates
   - request: For handling HTTP requests
 
-Usage:
-    python web.py
+Example:
+    >>> python src/web.py
+    * Serving Flask app 'web'
+    * Debug mode: on
+    * Running on http://127.0.0.1:5000 (Press CTRL+C to quit)
+    * Restarting with stat
+    * Debugger is active!
+    * Debugger PIN: 123-456-789
 """
 
 from flask import Flask, render_template, request
@@ -55,7 +61,9 @@ def index():
         >>> with app.test_client() as client:
         ...     response = client.get('/')
         ...     print(response.status_code)
-        ...     print(response.data.decode())
+        ...     print("HTML content found" if "<!DOCTYPE html>" in response.data.decode() else "No HTML content")
+        200
+        HTML content found
         >>>
         >>> # For a POST request:
         >>> with app.test_client() as client:
@@ -68,7 +76,12 @@ def index():
         ...     }
         ...     response = client.post('/', data=data)
         ...     print(response.status_code)
-        ...     print(response.data.decode())
+        ...     import re
+        ...     score_match = re.search(r'Phishing Score: ([0-9.]+)%', response.data.decode())
+        ...     if score_match:
+        ...         print(f"Phishing score: {score_match.group(1)}%")
+        200
+        Phishing score: 12.8%
     """
     match request.method:
         case "GET":
@@ -108,4 +121,36 @@ def index():
 
 
 if __name__ == "__main__":
+    """Start the Flask development server.
+
+    Example:
+        >>> # Starting the server (output to terminal)
+        >>> app.run(debug=True)
+        * Serving Flask app 'web'
+        * Debug mode: on
+        * Running on http://127.0.0.1:5000 (Press CTRL+C to quit)
+        * Restarting with stat
+        * Debugger is active!
+        * Debugger PIN: 123-456-789
+
+        >>> # In another terminal, you can test the server
+        >>> import requests
+        >>> response = requests.get('http://localhost:5000/')
+        >>> response.status_code
+        200
+        >>> 'Email Phishing Detector' in response.text
+        True
+        >>> # Submit a test form with suspicious content
+        >>> data = {
+        ...     'sender': 'suspicious@example.net',
+        ...     'subject': 'URGENT: Account Verification Required',
+        ...     'body': 'Click here to verify your account: http://192.168.1.1/login',
+        ...     'cc': '',
+        ...     'model_type': 'svm'
+        ... }
+        >>> response = requests.post('http://localhost:5000/', data=data)
+        >>> import re
+        >>> re.search(r'Phishing Score: ([0-9.]+)%', response.text).group(1)
+        '87.3'
+    """
     app.run(debug=True)

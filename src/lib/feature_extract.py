@@ -61,11 +61,28 @@ def find_suspicious_words(
     suspicious_words: set[str],
 ) -> Iterator[int]:
     """
-    Scans the `words` for suspicious keywords and returns the index of each keyword found.
-    For performance reasons, all words in `suspicious_words` must be lowercase.
+    Scan a list of words for suspicious keywords and return the indices of matches.
+
+    This function efficiently identifies suspicious words that might indicate phishing content
+    by comparing each word against a known set of suspicious terms. It returns the positions
+    where suspicious words are found.
 
     Time complexity: `O(n)` where `n` is the number of words.
     Space complexity: `O(1)`.
+
+    Args:
+        words: Iterable of words to check against suspicious words list
+        suspicious_words: Set of suspicious words to look for (must be lowercase)
+
+    Returns:
+        Iterator[int]: Generator yielding indices of suspicious words in the input list
+
+
+    Example:
+        >>> words = ["Hello", "update", "your", "password", "now"]
+        >>> suspicious = {"password", "update", "urgent", "verify"}
+        >>> list(find_suspicious_words(words, suspicious))
+        [1, 3]
     """
     for i, word in enumerate(words):
         if word.lower() in suspicious_words:
@@ -157,13 +174,6 @@ def is_typosquatted_domain(
     This function uses Levenshtein distance to detect domains that are
     similar to safe domains but not identical.
 
-    Example:
-        >>> tree = BKTree(levenshtein_distance, ["google.com", "microsoft.com"])
-        >>> is_typosquatted_domain("goggle.com", tree, 2)
-        True
-        >>> is_typosquatted_domain("completelydifferent.com", tree, 2)
-        False
-
     Args:
         domain_host: The domain host name to check
         safe_domain_tree: BK-tree of safe domain names for efficient similarity search
@@ -171,6 +181,13 @@ def is_typosquatted_domain(
 
     Returns:
         bool: True if the domain appears to be a typosquatted version of a safe domain
+
+    Example:
+        >>> tree = BKTree(levenshtein_distance, ["google.com", "microsoft.com"])
+        >>> is_typosquatted_domain("goggle.com", tree, 2)
+        True
+        >>> is_typosquatted_domain("completelydifferent.com", tree, 2)
+        False
     """
     return (
         domain_host not in safe_domain_tree.items
@@ -188,6 +205,8 @@ def count_typosquatted_domains(
 
     This is an important phishing detection feature as phishers often use
     domains that are visually similar to legitimate domains to trick users.
+    For example, using "goggle.com" instead of "google.com" or
+    "paypa1.com" instead of "paypal.com".
 
     Args:
         domains: Collection of domains to check
@@ -196,6 +215,19 @@ def count_typosquatted_domains(
 
     Returns:
         int: Count of domains that appear to be typosquatted
+\
+    Example:
+        >>> from .domain import Domain
+        >>> from .bktree import BKTree, levenshtein_distance
+        >>> safe_domains = ["google.com", "amazon.com", "microsoft.com"]
+        >>> tree = BKTree(levenshtein_distance, safe_domains)
+        >>> domains = [
+        ...     Domain("www", "goggle", "com"),
+        ...     Domain("", "amaz0n", "com"),
+        ...     Domain("", "totally-different", "org")
+        ... ]
+        >>> count_typosquatted_domains(domains, tree, 1)
+        2
     """
     return sum(
         1
@@ -205,7 +237,28 @@ def count_typosquatted_domains(
 
 
 def is_ip_address(url: Url) -> bool:
-    """Return whether the URL's netloc is an IP address."""
+    """
+    Determine whether a URL uses an IP address instead of a domain name.
+
+    URLs that use IP addresses directly (like http://192.168.1.1/) instead of domain names
+    are often associated with phishing attempts, as they circumvent DNS lookups and can
+    hide the true identity of the server.
+
+    Args:
+        url: A parsed URL object to check
+
+    Returns:
+        bool: True if the URL uses an IP address, False otherwise
+
+    Example:
+        >>> from urllib.parse import urlparse
+        >>> is_ip_address(urlparse("http://192.168.1.1/login"))
+        True
+        >>> is_ip_address(urlparse("https://example.com/path"))
+        False
+        >>> is_ip_address(urlparse("http://2001:db8::1/path"))  # IPv6
+        True
+    """
     if url.hostname is None:
         return False
     try:
@@ -216,7 +269,29 @@ def is_ip_address(url: Url) -> bool:
 
 
 def count_ip_addresses(urls: Iterable[Url]) -> int:
-    """Count the number of URLs that are IP addresses."""
+    """
+    Count the number of URLs that use IP addresses instead of domain names.
+
+    URLs with IP addresses are often a red flag in phishing detection because legitimate
+    organizations typically use domain names. Phishers may use IP addresses to avoid
+    domain registration or to disguise the true location of their servers.
+
+    Args:
+        urls: Collection of URL objects to check
+
+    Returns:
+        int: Number of URLs that use IP addresses
+
+    Example:
+        >>> from urllib.parse import urlparse
+        >>> urls = [
+        ...     urlparse("http://192.168.1.1/login"),
+        ...     urlparse("https://example.com/path"),
+        ...     urlparse("http://10.0.0.1/secure")
+        ... ]
+        >>> count_ip_addresses(urls)
+        2
+    """
     return sum(1 for url in urls if is_ip_address(url))
 
 
@@ -224,7 +299,36 @@ def email_domain_matches_url(
     email_address: EmailAddress | None,
     url_domains: list[Domain],
 ) -> bool:
-    """Check if the email domain matches any of the given URL domains."""
+    """
+    Check if the sender's email domain matches any domains in the URLs of the email.
+
+    This is an important phishing indicator because legitimate emails typically contain
+    links to the sender's own domain (e.g., emails from amazon.com link to amazon.com),
+    while phishing emails often have mismatched domains (e.g., emails claiming to be
+    from amazon.com link to malicious-site.com).
+
+    Args:
+        email_address: The parsed sender email address, or None if parsing failed
+        url_domains: List of domains extracted from URLs in the email
+
+    Returns:
+        bool: True if the sender's domain matches any URL domain or there are no URLs,
+              False if there's no match or the sender couldn't be parsed
+
+    Example:
+        >>> from .domain import Domain
+        >>> from .email_address import parse_email_address
+        >>> sender = parse_email_address("service@amazon.com")
+        >>> domains = [
+        ...     Domain(subdomain="www", domain_name="amazon", tld="com"),
+        ...     Domain(subdomain="", domain_name="phishing", tld="com")
+        ... ]
+        >>> email_domain_matches_url(sender, domains)
+        True
+        >>> domains = [Domain(subdomain="", domain_name="phishing", tld="com")]
+        >>> email_domain_matches_url(sender, domains)
+        False
+    """
     if email_address is None:
         # If we can't find the sender, there's something wrong with this email,
         # so we return False to mark it as suspicious.
@@ -244,13 +348,23 @@ def capital_words_ratio(words: list[str]) -> float:
     Calculate the ratio of all-uppercase words in the email.
 
     Phishing emails often use excessive capitalization to create urgency
-    or draw attention to specific parts of the message.
+    or draw attention to specific parts of the message. This function helps
+    identify emails that use this tactic by measuring the proportion of
+    words that are entirely uppercase.
 
     Args:
         words: List of words from the email
 
     Returns:
         float: Ratio of all-uppercase words to total words (0.0 to 1.0)
+
+    Example:
+        >>> capital_words_ratio(["Hello", "URGENT", "please", "UPDATE", "now"])
+        0.4
+        >>> capital_words_ratio(["this", "is", "normal", "text"])
+        0.0
+        >>> capital_words_ratio(["ALL", "CAPS", "TEXT", "HERE"])
+        1.0
     """
     return sum(
         1  # This comment is to force the formatter to keep this on multiple lines
@@ -268,13 +382,23 @@ def money_tokens_ratio(tokens: list[str]) -> float:
     Calculate the ratio of tokens that represent monetary amounts.
 
     Phishing emails often mention money to entice victims (e.g., prizes,
-    refunds, or payments that need attention).
+    refunds, or payments that need attention). This function detects tokens
+    that represent currency amounts using common currency symbols ($, €, £)
+    followed by numbers.
 
     Args:
         tokens: List of tokens from the email
 
     Returns:
         float: Ratio of money-related tokens to total tokens (0.0 to 1.0)
+
+    Example:
+        >>> money_tokens_ratio(["You", "won", "$1000", "in", "prizes"])
+        0.2
+        >>> money_tokens_ratio(["Your", "bill", "is", "$50", "please", "pay", "€20", "now"])
+        0.25
+        >>> money_tokens_ratio(["No", "money", "mentioned", "here"])
+        0.0
     """
     return sum(
         1  # This comment is to force the formatter to keep this on multiple lines

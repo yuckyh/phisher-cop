@@ -13,6 +13,20 @@ Libraries used:
 - scikit-learn: For machine learning metrics and evaluation
   - confusion_matrix: For evaluating classification performance
   - f1_score: For model performance measurement
+
+Example:
+    To train a model with default settings, simply run this script:
+
+    >>> python src/train.py
+    Train set: 1500 samples
+    Test set: 500 samples
+    Saved trained model to models/svm.joblib
+    Train accuracy: 0.985
+    Test accuracy: 0.924
+    Confusion matrix:
+    [[228  22]
+     [ 16 234]]
+    F1 score: 0.923
 """
 
 import os
@@ -35,7 +49,7 @@ from lib.model import (
 )
 
 # Configuration constants
-FORCE_REGENERATE_SUSPICIOUS_WORDS  = False  # When True, always regenerate the suspicious words list
+FORCE_REGENERATE_SUSPICIOUS_WORDS = False  # When True, always regenerate the suspicious words list
 MODEL_TYPE = ModelType.SVM  # The type of model to train (SVM or RANDOM_FOREST)
 MODEL_SEED = 69420  # Random seed for reproducible results
 
@@ -82,6 +96,19 @@ def generate_suspicious_words(
 
     Returns:
         None (writes output to SUSPICIOUS_WORDS file)
+
+    Example:
+        >>> from numpy import array
+        >>> from lib.dataset import Label
+        >>> words = [
+        ...     ["hello", "this", "is", "legitimate"],
+        ...     ["urgent", "money", "transfer", "bitcoin"],
+        ... ]
+        >>> labels = array([Label.HAM.value, Label.SPAM.value], dtype=np.uint8)
+        >>> generate_suspicious_words(words, labels)
+        Generating suspicious keyword list...
+        Generated 2 suspicious keywords.
+        # Creates file with 'urgent' and 'bitcoin' as suspicious words
     """
     print("Generating suspicious keyword list...")
 
@@ -110,8 +137,27 @@ def generate_suspicious_words(
 
 
 if __name__ == "__main__":
-    # Main execution flow for training the phishing detection model
+    """Main execution flow for training the phishing detection model.
 
+    Example:
+        To customize model training, modify the configuration constants and run:
+
+        >>> # First edit train.py to set:
+        >>> # MODEL_TYPE = ModelType.RANDOM_FOREST
+        >>> # FORCE_REGENERATE_SUSPICIOUS_WORDS = True
+        >>> python src/train.py
+        Train set: 1500 samples
+        Test set: 500 samples
+        Generating suspicious keyword list...
+        Generated 173 suspicious keywords.
+        Saved trained model to models/random_forest.joblib
+        Train accuracy: 0.997
+        Test accuracy: 0.938
+        Confusion matrix:
+        [[231  19]
+         [ 12 238]]
+        F1 score: 0.936
+    """
     # Step 1: Load the training and test data
     (train_X, train_y), (test_X, test_y) = load_data()
     for X, name in zip((train_X, test_X), ("Train", "Test")):

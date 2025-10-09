@@ -47,6 +47,14 @@ class Domain:
 
         Returns:
             str: The combined domain_name and tld (e.g., 'example.com')
+
+        Example:
+            >>> domain = Domain(subdomain='www', domain_name='example', tld='com')
+            >>> print(domain.host)
+            'example.com'
+            >>> domain_no_tld = Domain(subdomain='', domain_name='localhost', tld='')
+            >>> print(domain_no_tld.host)
+            'localhost'
         """
         return f"{self.domain_name}.{self.tld}" if self.tld else self.domain_name
 
@@ -67,8 +75,12 @@ def parse_domain(url: Url) -> Domain:
         >>> from urllib.parse import urlparse
         >>> url = urlparse('https://www.example.com/path')
         >>> domain = parse_domain(url)
-        >>> print(domain.host)
-        'example.com'
+        >>> print(domain.subdomain)
+        'www'
+        >>> print(domain.domain_name)
+        'example'
+        >>> print(domain.tld)
+        'com'
     """
     domain_parts = extract(url.netloc)
     return Domain(

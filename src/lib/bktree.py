@@ -90,6 +90,20 @@ class BKTree:
         Space complexity: `O(1)`
 
         Where `n` is the number of items in the tree.
+
+        Example:
+            >>> def simple_distance(a, b):
+            ...     return abs(len(a) - len(b))
+            >>> tree = BKTree(simple_distance, ["cat"])
+            >>> tree.insert("dog")
+            >>> print(len(tree.items))
+            2
+            >>> tree.insert("dog")  # Inserting duplicate has no effect
+            >>> print(len(tree.items))
+            2
+            >>> tree.insert("mouse")
+            >>> "mouse" in tree.items
+            True
         """
         # Item is already in the tree
         if item in self.items:

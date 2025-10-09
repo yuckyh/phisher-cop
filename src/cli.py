@@ -41,8 +41,9 @@ from lib.model import ModelType, PhisherCop
 def main(filepath: str, model_path: str):
     """Analyze an email file to determine if it's a phishing attempt.
 
-    Reads an email from the file at FILEPATH and prints a confidence score of
-    how likely it is to be a phishing email to stdout, along with relevant stats.
+    Reads an email from the file at FILEPATH, loads the model from MODEL_PATH, and prints
+    a confidence score of how likely it is to be a phishing email to stdout, along with
+    relevant stats. The default model is SVM but Random Forest can also be used.
 
     Args:
         filepath: Path to the email file to analyze

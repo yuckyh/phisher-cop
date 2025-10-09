@@ -61,7 +61,7 @@ class Label(Enum):
     SPAM = 1
 
 
-def update_hash(hash_func, file_path: str):
+def update_hash(hash_func: 'hashlib._Hash', file_path: str) -> None:
     """
     Update the given hash function with the contents of a file.
 
@@ -193,7 +193,7 @@ def split_dir(dir_path: str, splits: list[float]) -> list[list[str]]:
     return parts
 
 
-def unzip(zip_path: str, zip_hash_expected: str, out_dir: str):
+def unzip(zip_path: str, zip_hash_expected: str, out_dir: str) -> None:
     """
     Unzip the dataset archive to the specified output directory.
 
@@ -224,7 +224,7 @@ def unzip(zip_path: str, zip_hash_expected: str, out_dir: str):
 
 # There are no unit tests for this function as it is specific to our exact dataset,
 # so the only sensible test is to check the final hash of the data directory.
-def restructure_splits(out_dir: str, splits: list[float]):  # pragma: no cover
+def restructure_splits(out_dir: str, splits: list[float]) -> None:  # pragma: no cover
     """
     Restructure the unzipped data into train/test splits.
 

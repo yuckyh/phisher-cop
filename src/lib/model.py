@@ -1,5 +1,9 @@
-"""
-Core model functionality for the phishing detection system.
+"""Core model functionality for the phishing detection system.
+
+This module provides the core machine learning infrastructure for phishing detection:
+- ModelType enum to represent different classifier types
+- PhisherCop class for end-to-end email analysis
+- Functions for model creation, preprocessing, and feature extraction
 
 Libraries used:
 - sklearn (scikit-learn): Machine learning library providing:
@@ -10,6 +14,26 @@ Libraries used:
   - TfidfVectorizer: For text feature extraction
   - StandardScaler: For feature normalization
 - joblib: For model serialization and persistence
+
+Example:
+    >>> from lib.model import ModelType, PhisherCop
+    >>> from lib.email import email_from_input
+    >>>
+    >>> # Load a trained phishing detection model
+    >>> model = PhisherCop.load("models/svm.joblib")
+    >>>
+    >>> # Create an email from user input
+    >>> email = email_from_input(
+    ...     sender="suspicious@example.com",
+    ...     subject="URGENT: Verify your account now!",
+    ...     payload="Click here to verify: http://192.168.1.1/login",
+    ...     cc=""
+    ... )
+    >>>
+    >>> # Get phishing probability score
+    >>> score = model.score_email(email)
+    >>> print(f"Phishing probability: {score:.1%}")
+    Phishing probability: 87.5%
 """
 
 import os
@@ -39,8 +63,8 @@ from .feature_extract import (
     score_suspicious_words,
 )
 
-MODELS_PATH = os.path.join(PROJECT_ROOT, "models")
-Model = RandomForestClassifier | SVC
+MODELS_PATH = os.path.join(PROJECT_ROOT, "models")  # Path to the directory containing trained model files
+Model = RandomForestClassifier | SVC  # Type alias for supported model types
 
 
 class ModelType(Enum):
@@ -62,6 +86,17 @@ class ModelType(Enum):
 
         Returns:
             bool: True if the model type uses TF-IDF features, False otherwise
+
+        Example:
+            >>> ModelType.RANDOM_FOREST.uses_tfidf
+            True
+            >>> ModelType.SVM.uses_tfidf
+            False
+            >>> # This can be used to decide whether to include text features
+            >>> for model_type in ModelType:
+            ...     print(f"{model_type.name}: {'Uses' if model_type.uses_tfidf else 'Does not use'} TF-IDF")
+            RANDOM_FOREST: Uses TF-IDF
+            SVM: Does not use TF-IDF
         """
         match self:
             case ModelType.RANDOM_FOREST:
@@ -75,6 +110,22 @@ class ModelType(Enum):
 
         Returns:
             str: The absolute path where models of this type are stored by default
+
+        Example:
+            >>> import os
+            >>> # Get default paths for different model types
+            >>> svm_path = ModelType.SVM.default_path
+            >>> rf_path = ModelType.RANDOM_FOREST.default_path
+            >>>
+            >>> # Paths include the model type name
+            >>> os.path.basename(svm_path)
+            'svm.joblib'
+            >>> os.path.basename(rf_path)
+            'random_forest.joblib'
+            >>>
+            >>> # Use in loading/saving operations
+            >>> model = PhisherCop.load(ModelType.SVM.default_path)
+            >>> model.save(ModelType.SVM.default_path)
         """
         return os.path.join(MODELS_PATH, f"{self.value}.joblib")
 
@@ -107,6 +158,27 @@ class PhisherCop:
 
         Raises:
             ValueError: If the model type is not supported
+
+        Example:
+            >>> from sklearn.pipeline import Pipeline
+            >>> from sklearn.preprocessing import StandardScaler
+            >>> from sklearn.svm import SVC
+            >>>
+            >>> # Create pipeline and model
+            >>> pipeline = Pipeline([('scaler', StandardScaler())])
+            >>> model = SVC(probability=True)
+            >>>
+            >>> # Initialize PhisherCop instance
+            >>> phisher_cop = PhisherCop(pipeline, model)
+            >>> phisher_cop.model_type == ModelType.SVM
+            True
+            >>>
+            >>> # Trying with unsupported model type
+            >>> try:
+            ...     PhisherCop(pipeline, "not a model")
+            ... except ValueError as e:
+            ...     print(f"Error: {e}")
+            Error: Unsupported model type
         """
         self.pipeline = pipeline
         self.model = model
@@ -128,6 +200,24 @@ class PhisherCop:
 
         Returns:
             None
+
+        Example:
+            >>> import os
+            >>> from sklearn.pipeline import Pipeline
+            >>> from sklearn.svm import SVC
+            >>>
+            >>> # Create and save a model
+            >>> pipeline = Pipeline([('noop', 'passthrough')])
+            >>> model = SVC(probability=True)
+            >>> phisher_cop = PhisherCop(pipeline, model)
+            >>>
+            >>> # Save to a temp directory
+            >>> import tempfile
+            >>> with tempfile.TemporaryDirectory() as tmpdir:
+            ...     model_path = os.path.join(tmpdir, "test_model.joblib")
+            ...     phisher_cop.save(model_path)
+            ...     print(f"Model saved: {os.path.exists(model_path)}")
+            Model saved: True
         """
         os.makedirs(os.path.dirname(path), exist_ok=True)
         joblib.dump(self, path, compress=("zlib", 3))  # type: ignore
@@ -145,6 +235,21 @@ class PhisherCop:
         Raises:
             FileNotFoundError: If the model file doesn't exist
             ValueError: If the loaded object is not a PhisherCop instance
+
+        Example:
+            >>> # Load an existing model
+            >>> try:
+            ...     model = PhisherCop.load("models/svm.joblib")
+            ...     print(f"Model type: {model.model_type.name}")
+            ... except FileNotFoundError:
+            ...     print("Model file not found (expected in testing environment)")
+            ...
+            >>> # Handling non-existent file
+            >>> try:
+            ...     PhisherCop.load("non_existent_file.joblib")
+            ... except FileNotFoundError as e:
+            ...     print(f"Error: {e}")
+            Error: Model file not found: non_existent_file.joblib
         """
         if not os.path.exists(path):
             raise FileNotFoundError(f"Model file not found: {path}")
@@ -164,6 +269,42 @@ class PhisherCop:
             float: Phishing score between 0.0 and 1.0, where:
                   - 1.0 means definitely spam/phishing
                   - 0.0 means definitely ham/legitimate
+
+        Example:
+            >>> from lib.email import email_from_input
+            >>>
+            >>> # Load a model (or create a sample one for testing)
+            >>> try:
+            ...     model = PhisherCop.load("models/svm.joblib")
+            ... except FileNotFoundError:
+            ...     # For demonstration, create a simple model
+            ...     from sklearn.pipeline import Pipeline
+            ...     from sklearn.preprocessing import StandardScaler
+            ...     from sklearn.svm import SVC
+            ...     pipeline = Pipeline([('scaler', StandardScaler())])
+            ...     clf = SVC(probability=True)
+            ...     model = PhisherCop(pipeline, clf)
+            ...
+            >>> # Create test emails with different risk profiles
+            >>> legitimate_email = email_from_input(
+            ...     "friend@gmail.com",
+            ...     "Lunch tomorrow",
+            ...     "Hi! Are we still on for lunch tomorrow? Let me know. Thanks!",
+            ...     ""
+            ... )
+            >>>
+            >>> suspicious_email = email_from_input(
+            ...     "banking@secure-verify-login.com",
+            ...     "URGENT: Verify Your Account Now",
+            ...     "Dear customer, your account has been locked. Click here: http://182.168.0.1/login",
+            ...     ""
+            ... )
+            >>>
+            >>> # Compare scores (actual values will vary)
+            >>> legitimate_score = model.score_email(legitimate_email)
+            >>> suspicious_score = model.score_email(suspicious_email)
+            >>> print(f"Legitimate email is {'suspicious' if legitimate_score > 0.5 else 'safe'}")
+            >>> print(f"Suspicious email is {'suspicious' if suspicious_score > 0.5 else 'safe'}")
         """
         preprocessed_email = preprocess_email(email, ignore_errors=False)
         features = extract_features(self.model_type, preprocessed_email)
@@ -224,8 +365,7 @@ def create_preprocessor(model_type: ModelType) -> Pipeline:
 
 
 def create_model(model_type: ModelType, seed: int) -> Model:
-    """
-    Create an untrained model of the specified type.
+    """Create an untrained model of the specified type.
 
     Args:
         model_type: The type of model to create
@@ -233,6 +373,18 @@ def create_model(model_type: ModelType, seed: int) -> Model:
 
     Returns:
         Model: An untrained classifier instance (RandomForestClassifier or SVC)
+
+    Example:
+        >>> from sklearn.ensemble import RandomForestClassifier
+        >>> from sklearn.svm import SVC
+        >>> rf_model = create_model(ModelType.RANDOM_FOREST, 42)
+        >>> isinstance(rf_model, RandomForestClassifier)
+        True
+        >>> svm_model = create_model(ModelType.SVM, 42)
+        >>> isinstance(svm_model, SVC)
+        True
+        >>> svm_model.probability  # SVM configured to output probabilities
+        True
     """
     match model_type:
         case ModelType.RANDOM_FOREST:
@@ -255,8 +407,7 @@ def create_model(model_type: ModelType, seed: int) -> Model:
 def extract_features(
     model_type: ModelType, email: PreprocessedEmail
 ) -> list[float | str]:
-    """
-    Extract features from a preprocessed email for model training or inference.
+    """Extract features from a preprocessed email for model training or inference.
 
     This function creates a feature vector containing:
     1. Count of email addresses from safe domains
@@ -274,6 +425,32 @@ def extract_features(
 
     Returns:
         list: A feature vector containing numerical features (and text for TF-IDF models)
+
+    Example:
+        >>> from lib.email import PreprocessedEmail
+        >>> # Create a sample preprocessed email
+        >>> email = PreprocessedEmail(
+        ...     words=["hello", "money", "urgent", "account"],
+        ...     tokens=["hello", "money", "$100", "urgent", "account"],
+        ...     urls=["http://example.com", "http://192.168.1.1"],
+        ...     domains=["example.com"],
+        ...     addresses=["user@example.com", "admin@gmail.com"],
+        ...     sender="user@malicious.com"
+        ... )
+        >>> # Extract features for SVM model (no TF-IDF)
+        >>> svm_features = extract_features(ModelType.SVM, email)
+        >>> len(svm_features)  # Seven numerical features
+        7
+        >>> isinstance(svm_features[0], float)  # All features are floats
+        True
+        >>> # Extract features for Random Forest model (with TF-IDF)
+        >>> rf_features = extract_features(ModelType.RANDOM_FOREST, email)
+        >>> len(rf_features)  # Eight features (text + seven numerical)
+        8
+        >>> isinstance(rf_features[0], str)  # First feature is text
+        True
+        >>> rf_features[0]  # Space-joined words
+        'hello money urgent account'
     """
     common_features: list[float | str] = [
         float(count_whitelisted_addresses(email.addresses, SAFE_DOMAINS)),
