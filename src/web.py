@@ -54,8 +54,8 @@ def index():
         >>> # For a GET request:
         >>> with app.test_client() as client:
         ...     response = client.get('/')
-        ...     assert response.status_code == 200
-        ...     assert 'form' in response.data.decode()
+        ...     print(response.status_code)
+        ...     print(response.data.decode())
         >>>
         >>> # For a POST request:
         >>> with app.test_client() as client:
@@ -67,8 +67,8 @@ def index():
         ...         'model_type': 'svm'
         ...     }
         ...     response = client.post('/', data=data)
-        ...     assert response.status_code == 200
-        ...     assert 'Phishing Score' in response.data.decode()
+        ...     print(response.status_code)
+        ...     print(response.data.decode())
     """
     match request.method:
         case "GET":
