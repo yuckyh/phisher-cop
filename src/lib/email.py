@@ -11,9 +11,6 @@ This module provides utilities for:
 The preprocessing pipeline is designed to handle both plain text
 and HTML emails, with special handling for quoted content and
 encodings commonly found in emails.
-
-Libraries used:
-- BeautifulSoup4: Used for parsing and navigating HTML content in emails
 """
 
 import re
@@ -33,7 +30,8 @@ Email = message.Message
 
 @dataclass()
 class PreprocessedEmail:
-    """A preprocessed email with raw features extracted for analysis.
+    """
+    A preprocessed email with raw features extracted for analysis.
 
     This dataclass stores the results of email preprocessing, which are
     used as inputs for feature extraction. It contains all the raw data
@@ -57,7 +55,8 @@ class PreprocessedEmail:
 
 
 def preprocess_email(email: Email, ignore_errors: bool = True) -> PreprocessedEmail:
-    """Preprocess an email to extract features for phishing detection.
+    """
+    Preprocess an email to extract features for phishing detection.
 
     This function extracts various components from an email that are useful
     for phishing detection, including URLs, text tokens, words, the sender,
@@ -103,7 +102,8 @@ def preprocess_email(email: Email, ignore_errors: bool = True) -> PreprocessedEm
 
 
 def email_from_file(path: str) -> Email:
-    """Load an email message from a file.
+    """
+    Load an email message from a file.
 
     Args:
         path: Path to the email file
@@ -169,7 +169,8 @@ def email_from_input(
 
 
 def decode_payload(email: Email) -> str:
-    """Decode the payload of a non-multipart email.
+    """
+    Decode the payload of a non-multipart email.
 
     This function handles decoding email content from various encodings and
     character sets, with special handling for common email encoding issues.
@@ -217,7 +218,8 @@ def decode_payload(email: Email) -> str:
 
 
 def remove_payload_quotes(payload: str) -> str:
-    """Removes common quoting prefixes from email payloads.
+    """
+    Removes common quoting prefixes from email payloads.
 
     This is a simple implementation that removes quote indicators ('>')
     from the beginning of lines in email replies. This is a very naive
@@ -241,7 +243,8 @@ def remove_payload_quotes(payload: str) -> str:
 
 
 def raw_payload(email: Email) -> str:
-    """Extract and combine all text content from an email.
+    """
+    Extract and combine all text content from an email.
 
     This function handles both simple single-part emails and complex
     multipart emails (like those with HTML and text alternatives).
@@ -272,7 +275,8 @@ def raw_payload(email: Email) -> str:
 
 
 def payload_dom(email: Email) -> BeautifulSoup:
-    """Convert email content into a BeautifulSoup DOM object for parsing.
+    """
+    Convert email content into a BeautifulSoup DOM object for parsing.
 
     This function processes the email content by:
     1. Extracting the raw textual payload
@@ -305,7 +309,8 @@ def payload_dom(email: Email) -> BeautifulSoup:
 
 
 def get_email_addresses(email: Email, ignore_errors: bool) -> list[EmailAddress]:
-    """Extract and parse all email addresses from the From and Cc fields.
+    """
+    Extract and parse all email addresses from the From and Cc fields.
 
     This function collects all email addresses from the email's From and Cc
     headers, parses them into structured EmailAddress objects, and handles
@@ -391,7 +396,8 @@ def normalize_url(raw_url: str) -> Url:
 
 
 def anchor_urls(dom: BeautifulSoup) -> set[Url]:
-    """Extract and normalize URLs from anchor tags in HTML content.
+    """
+    Extract and normalize URLs from anchor tags in HTML content.
 
     This function finds all anchor (<a>) tags in the BeautifulSoup DOM,
     extracts their href attributes, normalizes the URLs, and returns
@@ -460,7 +466,8 @@ def token_urls(
 
 
 def raw_dom_tokens(dom: BeautifulSoup) -> list[str]:
-    """Extract whitespace-separated tokens from the document's text content.
+    """
+    Extract whitespace-separated tokens from the document's text content.
 
     This function extracts all text content from a BeautifulSoup DOM object,
     replacing all whitespace with single spaces, then splits the text into
@@ -483,7 +490,8 @@ def raw_dom_tokens(dom: BeautifulSoup) -> list[str]:
 
 
 def domains_from_urls(urls: set[Url]) -> list[Domain]:
-    """Extract domain information from a set of URLs.
+    """
+    Extract domain information from a set of URLs.
 
     This function processes each URL in the provided set and extracts
     structured domain information, including subdomain, main domain name,

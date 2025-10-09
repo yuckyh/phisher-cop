@@ -1,19 +1,10 @@
-"""Core model functionality for the phishing detection system.
+"""
+Core model functionality for the phishing detection system.
 
 This module provides the core machine learning infrastructure for phishing detection:
 - ModelType enum to represent different classifier types
-- PhisherCop class for end-to-end email analysis
+- PhisherCop class for end-to-end email phishing detection
 - Functions for model creation, preprocessing, and feature extraction
-
-Libraries used:
-- sklearn (scikit-learn): Machine learning library providing:
-  - RandomForestClassifier: Ensemble method for classification
-  - SVC: Support Vector Machine classifier
-  - Pipeline: For creating machine learning workflows
-  - ColumnTransformer: For applying transformations to specific columns
-  - TfidfVectorizer: For text feature extraction
-  - StandardScaler: For feature normalization
-- joblib: For model serialization and persistence
 
 Example:
     >>> from lib.model import ModelType, PhisherCop
@@ -70,7 +61,8 @@ Model = RandomForestClassifier | SVC  # Type alias for supported model types
 
 
 class ModelType(Enum):
-    """Enum defining the available machine learning model types for phishing detection.
+    """
+    Enum defining the available machine learning model types for phishing detection.
 
     Each model type has different characteristics:
     - RANDOM_FOREST: Uses TF-IDF features and is generally more interpretable
@@ -85,7 +77,8 @@ class ModelType(Enum):
 
     @property
     def uses_tfidf(self) -> bool:  # pragma: no cover
-        """Determine if the model type requires TF-IDF text features.
+        """
+        Determine if the model type requires TF-IDF text features.
 
         Returns:
             bool: True if the model type uses TF-IDF features, False otherwise
@@ -109,7 +102,8 @@ class ModelType(Enum):
 
     @property
     def default_path(self) -> str:  # pragma: no cover
-        """Get the default file path for saving/loading this model type.
+        """
+        Get the default file path for saving/loading this model type.
 
         Returns:
             str: The absolute path where models of this type are stored by default
@@ -134,7 +128,8 @@ class ModelType(Enum):
 
 
 class PhisherCop:
-    """End-to-end inference for e-mail phishing detection.
+    """
+    End-to-end inference for e-mail phishing detection.
 
     This class provides a complete solution for phishing detection by combining:
     1. A preprocessing pipeline that transforms raw emails into feature vectors
@@ -153,7 +148,8 @@ class PhisherCop:
     """
 
     def __init__(self, pipeline: Pipeline, model: Model) -> None:
-        """Initialize the PhisherCop model with a preprocessor pipeline and trained model.
+        """
+        Initialize the PhisherCop model with a preprocessor pipeline and trained model.
 
         Args:
             pipeline: A scikit-learn Pipeline that transforms raw features into model inputs
@@ -196,7 +192,8 @@ class PhisherCop:
                 raise ValueError("Unsupported model type")
 
     def save(self, path: str) -> None:
-        """Save the PhisherCop model to disk.
+        """
+        Save the PhisherCop model to disk.
 
         Args:
             path: File path where the model will be saved
@@ -227,7 +224,8 @@ class PhisherCop:
 
     @staticmethod
     def load(path: str) -> "PhisherCop":
-        """Load a saved PhisherCop model from disk.
+        """
+        Load a saved PhisherCop model from disk.
 
         Args:
             path: File path to the saved model
@@ -263,7 +261,8 @@ class PhisherCop:
         return model
 
     def score_email(self, email: Email) -> float:
-        """Calculate the probability that an email is a phishing attempt.
+        """
+        Predict the probability that an email is a phishing attempt.
 
         Args:
             email: An Email object to be scored
@@ -316,7 +315,8 @@ class PhisherCop:
 
 
 def create_preprocessor(model_type: ModelType) -> Pipeline:
-    """Create an untrained preprocessor pipeline for the specified model type.
+    """
+    Create an untrained preprocessor pipeline for the specified model type.
 
     This function builds a scikit-learn Pipeline that handles:
     - For TF-IDF models: Text vectorization and numerical feature scaling
@@ -368,14 +368,15 @@ def create_preprocessor(model_type: ModelType) -> Pipeline:
 
 
 def create_model(model_type: ModelType, seed: int) -> Model:
-    """Create an untrained model of the specified type.
+    """
+    Create an untrained model of the specified type.
 
     Args:
         model_type: The type of model to create
         seed: Random seed for reproducible results
 
     Returns:
-        Model: An untrained classifier instance (RandomForestClassifier or SVC)
+        Model: An untrained classifier instance
 
     Example:
         >>> from sklearn.ensemble import RandomForestClassifier
@@ -410,17 +411,10 @@ def create_model(model_type: ModelType, seed: int) -> Model:
 def extract_features(
     model_type: ModelType, email: PreprocessedEmail
 ) -> list[float | str]:
-    """Extract features from a preprocessed email for model training or inference.
+    """
+    Extract features from a preprocessed email for model training or inference.
 
-    This function creates a feature vector containing:
-    1. Count of email addresses from safe domains
-    2. Score of suspicious words present in the email
-    3. Count of typosquatted domains in the email
-    4. Count of IP addresses in URLs
-    5. Whether the sender's domain matches any URL domain
-    6. Ratio of capitalized words
-    7. Ratio of money-related tokens
-    8. For TF-IDF models only: A space-joined string of all words
+    The types of features extracted depend on the model type.
 
     Args:
         model_type: The type of model for which features are being extracted

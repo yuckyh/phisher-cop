@@ -10,9 +10,6 @@ The BK-tree structure allows for much faster lookup of similar strings than
 naive approaches, making it ideal for detecting typosquatted domains and
 similar phishing techniques. The tree organizes strings in a way that allows
 quick elimination of large portions of the search space.
-
-Libraries used:
-- typing_extensions: Enhanced type annotations for better code readability
 """
 
 from dataclasses import dataclass

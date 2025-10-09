@@ -10,10 +10,6 @@ This module provides utilities for:
 The dataset functions handle downloading, extracting, and organizing the
 email corpus in a reproducible way, ensuring consistent train/test splits
 across different runs and environments through the use of fixed random seeds.
-
-Libraries used:
-- numpy: For numerical operations and array handling
-- typing_extensions: Enhanced type annotations
 """
 
 import hashlib
@@ -115,8 +111,7 @@ def hash_dir(dir_path: str) -> str:
     Compute the SHA-256 hash of a directory by hashing all its files and file paths.
 
     This function creates a deterministic hash of an entire directory structure,
-    including both file contents and relative paths. It's used to verify that
-    the dataset has been correctly prepared with the expected structure.
+    including both file contents and relative paths.
 
     Args:
         dir_path: Path to the directory to hash
@@ -150,8 +145,8 @@ def split_dir(dir_path: str, splits: list[float]) -> list[list[str]]:
     Split the files in a directory into multiple parts according to the given ratios.
 
     This function divides the files in a directory into multiple groups based on
-    the provided split ratios. It uses random shuffling with a fixed seed to ensure
-    reproducible splits across different runs.
+    the provided split ratios. Call `random.seed()` before calling this function
+    to ensure reproducible splits.
 
     Args:
         dir_path: Path to the directory containing files to split
@@ -209,10 +204,6 @@ def unzip(zip_path: str, zip_hash_expected: str, out_dir: str) -> None:
 
     Raises:
         Exception: If the archive's hash doesn't match the expected value
-
-    Note:
-        This function is designed to work with the specific SpamAssassin dataset
-        used for this project.
     """
     if hash_file(zip_path) != zip_hash_expected:
         raise Exception(f"Corrupted {zip_path}, please re-download it")
@@ -331,15 +322,6 @@ def load_data() -> tuple[DataSplit, DataSplit]:  # pragma: no cover
     Note:
         Before running, download the dataset and place it in this project's root directory as `archive.zip`:
         https://www.kaggle.com/datasets/beatoa/spamassassin-public-corpus
-
-    Example:
-        >>> train_data, test_data = load_data()
-        >>> train_emails, train_labels = train_data
-        >>> test_emails, test_labels = test_data
-        >>> print(f"Training set: {len(train_emails)} emails")
-        Training set: 3000 emails
-        >>> print(f"Testing set: {len(test_emails)} emails")
-        Testing set: 1000 emails
     """
 
     # Data is missing or corrupted, we need to unzip and prepare it first

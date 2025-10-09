@@ -1,4 +1,5 @@
-"""Entry point for the model training script.
+"""
+Entry point for the model training script.
 
 This module handles the end-to-end process of training a phishing detection model:
 1. Loading and preprocessing email data
@@ -8,11 +9,7 @@ This module handles the end-to-end process of training a phishing detection mode
 5. Evaluating model performance
 6. Saving the trained model to disk
 
-Libraries used:
-- numpy: For numerical operations and array handling
-- scikit-learn: For machine learning metrics and evaluation
-  - confusion_matrix: For evaluating classification performance
-  - f1_score: For model performance measurement
+This script may be configured via module-level constants defined at the top of this file.
 
 Example:
     To train a model with default settings, simply run this script:
@@ -57,7 +54,8 @@ MODEL_SEED = 69420  # Random seed for reproducible results
 
 
 def top_n(word_counts: dict[str, int], n: int) -> dict[str, int]:
-    """Return the top N words by frequency count from a word count dictionary.
+    """
+    Return the top N words by frequency count from a word count dictionary.
 
     Args:
         word_counts: Dictionary mapping words to their frequency counts
@@ -83,7 +81,8 @@ def top_n(word_counts: dict[str, int], n: int) -> dict[str, int]:
 def generate_suspicious_words(
     email_words: list[list[str]], labels: NDArray[np.uint8]
 ) -> None:
-    """Generate a list of suspicious words that are commonly found in phishing emails
+    """
+    Generate a list of suspicious words that are commonly found in phishing emails
     but rarely in legitimate emails.
 
     This function:
@@ -139,27 +138,6 @@ def generate_suspicious_words(
 
 
 if __name__ == "__main__":
-    """Main execution flow for training the phishing detection model.
-
-    Example:
-        To customize model training, modify the configuration constants and run:
-
-        >>> # First edit train.py to set:
-        >>> # MODEL_TYPE = ModelType.RANDOM_FOREST
-        >>> # FORCE_REGENERATE_SUSPICIOUS_WORDS = True
-        >>> python src/train.py
-        Train set: 1500 samples
-        Test set: 500 samples
-        Generating suspicious keyword list...
-        Generated 173 suspicious keywords.
-        Saved trained model to models/random_forest.joblib
-        Train accuracy: 0.997
-        Test accuracy: 0.938
-        Confusion matrix:
-        [[231  19]
-         [ 12 238]]
-        F1 score: 0.936
-    """
     # Step 1: Load the training and test data
     (train_X, train_y), (test_X, test_y) = load_data()
     for X, name in zip((train_X, test_X), ("Train", "Test")):

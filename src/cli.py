@@ -1,13 +1,10 @@
-"""Entry point for the command line interface.
+"""
+Entry point for the command line interface.
 
 This module provides a command-line interface for analyzing email files
 to determine if they are phishing attempts. It uses the trained PhisherCop
 model to score emails and provides feedback on whether they are likely
 legitimate or phishing emails.
-
-Libraries used:
-- click: Library for creating command-line interfaces
-  - Used for defining commands, arguments, and options
 
 Usage:
     python cli.py [OPTIONS] FILEPATH
@@ -39,21 +36,6 @@ from lib.model import ModelType, PhisherCop
     help="Path to the trained model file.",
 )
 def main(filepath: str, model_path: str):
-    """Analyze an email file to determine if it's a phishing attempt.
-
-    Reads an email from the file at FILEPATH, loads the model from MODEL_PATH, and prints
-    a confidence score of how likely it is to be a phishing email to stdout, along with
-    relevant stats. The default model is SVM but Random Forest can also be used.
-
-    Args:
-        filepath: Path to the email file to analyze
-        model_path: Path to the trained PhisherCop model file
-
-    Example:
-        >>> main("data/test/spam/0001.txt", "models/svm.joblib")
-        Phishing score: 87.65%
-        This email is likely a phishing email.
-    """
     # Load the model from the specified path
     model = PhisherCop.load(model_path)
 

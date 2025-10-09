@@ -1,8 +1,5 @@
 """
-Feature extraction module for phishing detection.
-
-Libraries used:
-- typing_extensions: Enhanced type annotations for better code readability
+Feature extraction module for phishing detection by a machine learning model.
 """
 
 import re
@@ -92,7 +89,8 @@ def find_suspicious_words(
 
 
 def suspicious_word_kernel(x: float) -> float:  # pragma: no cover
-    """A kernel function that weights suspicious words based on their position.
+    """
+    A kernel function that weights suspicious words based on their position.
 
     This function gives higher weight to suspicious words that appear earlier
     in the text, as phishing emails often front-load their suspicious content.
@@ -124,10 +122,11 @@ def score_suspicious_words(
     suspicious_words: set[str],
     kernel: Callable[[float], float] = suspicious_word_kernel,
 ) -> float:
-    """Calculate a score for suspicious words found in the email.
+    """
+    Calculate a score for suspicious words found in the email.
 
     This function:
-    1. Finds all suspicious words in the email
+    1. Finds all case-insensitive suspicious words in the email
     2. Weights them based on their position using the kernel function
     3. Normalizes the score by the total number of words
 
@@ -140,8 +139,7 @@ def score_suspicious_words(
         kernel: Function that weights words by position (default: suspicious_word_kernel)
 
     Returns:
-        float: A normalized suspiciousness score between 0.0 and 2.0
-               (0.0 = no suspicious words, higher = more suspicious)
+        float: A normalized suspiciousness score (lower is safer, higher is more suspicious)
     """
     end = max(1, len(words) - 1)
     score = 0.0
@@ -158,6 +156,8 @@ def score_suspicious_words(
     return score / max(1, len(words))
 
 
+# This function takes up an overwhelming portion of training time.
+# Using lru_cache speeds it up noticeably.
 @lru_cache(maxsize=1000)
 def is_typosquatted_domain(
     domain_host: str,
@@ -211,11 +211,11 @@ def count_typosquatted_domains(
     Args:
         domains: Collection of domains to check
         safe_domain_tree: BK-tree of safe domain names for efficient similarity search
-        edit_threshold: Maximum edit distance to consider a match (typically 1)
+        edit_threshold: Maximum edit distance be considered typosquatted (typically 1)
 
     Returns:
         int: Count of domains that appear to be typosquatted
-\
+
     Example:
         >>> from .domain import Domain
         >>> from .bktree import BKTree, levenshtein_distance
@@ -274,7 +274,7 @@ def count_ip_addresses(urls: Iterable[Url]) -> int:
 
     URLs with IP addresses are often a red flag in phishing detection because legitimate
     organizations typically use domain names. Phishers may use IP addresses to avoid
-    domain registration or to disguise the true location of their servers.
+    domain registration or to disguise the true identity of their servers.
 
     Args:
         urls: Collection of URL objects to check

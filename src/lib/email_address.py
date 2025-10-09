@@ -6,13 +6,8 @@ This module provides utilities for:
 2. Extracting username, alias, and domain components
 3. Representing email addresses in a structured format for feature extraction
 
-The module helps identify and process email addresses for phishing detection by
-providing structured access to components that can be analyzed for suspicious patterns.
-
-Libraries used:
-- re: Regular expressions library for email address pattern matching
-- email.utils: Provides parseaddr function for email address parsing
-- urllib.parse: Used for URL parsing to extract domain components
+The module helps process email addresses and provides structured access to
+components that can be analyzed.
 """
 
 import re
@@ -25,7 +20,8 @@ from .domain import Domain, parse_domain
 
 @dataclass()
 class EmailAddress:
-    """A parsed email address prepared for feature extraction.
+    """
+    A parsed email address prepared for feature extraction.
 
     This dataclass represents an email address split into its structural components:
     username, alias (if present), and domain. This structure facilitates analysis
@@ -48,7 +44,8 @@ ADDRESS_PATTERN = re.compile(r"(([^@+]*)\+)?([^@]+)@([^@]+)")
 
 
 def parse_email_address(address: str) -> EmailAddress:
-    """Parse an email address into its component parts.
+    """
+    Parse an email address into its component parts.
 
     This function takes an email address string and breaks it down into:
     1. Username (main part before the @ symbol)

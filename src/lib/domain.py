@@ -24,7 +24,8 @@ Url = urllib.parse.ParseResult
 
 @dataclass()
 class Domain:
-    """A parsed domain name with its component parts.
+    """
+    A parsed domain name with its component parts.
 
     This dataclass represents a domain name split into its structural components:
     subdomain, main domain name, and top-level domain (TLD). This structure
@@ -43,7 +44,8 @@ class Domain:
 
     @property
     def host(self) -> str:
-        """Return the host (domain + tld) of the domain.
+        """
+        Return the host (domain + tld) of the domain.
 
         Returns:
             str: The combined domain_name and tld (e.g., 'example.com')
@@ -60,7 +62,8 @@ class Domain:
 
 
 def parse_domain(url: Url) -> Domain:
-    """Extract and parse the domain components from a URL.
+    """
+    Extract and parse the domain components from a URL.
 
     This function takes a parsed URL and extracts its domain information,
     splitting it into subdomain, main domain name, and TLD components.
