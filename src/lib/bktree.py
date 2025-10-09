@@ -1,3 +1,20 @@
+"""
+Implementation of a Burkhard-Keller tree (BK-tree) for efficient string similarity searching.
+
+This module provides:
+1. BKTree data structure for fast approximate string matching
+2. Levenshtein distance function for measuring string similarity
+3. Efficient algorithms for finding strings within a specific edit distance
+
+The BK-tree structure allows for much faster lookup of similar strings than
+naive approaches, making it ideal for detecting typosquatted domains and
+similar phishing techniques. The tree organizes strings in a way that allows
+quick elimination of large portions of the search space.
+
+Libraries used:
+- typing_extensions: Enhanced type annotations for better code readability
+"""
+
 from dataclasses import dataclass
 
 from typing_extensions import Callable, Iterable
@@ -5,12 +22,36 @@ from typing_extensions import Callable, Iterable
 
 @dataclass
 class BKTreeNode:
+    """
+    Node in a BK-tree data structure.
+
+    Each node stores a string label and its children, organized by their
+    distance from the parent node. This structure enables efficient
+    similarity searches by pruning branches that cannot contain matches.
+
+    Attributes:
+        label: The string stored at this node
+        children: Dictionary mapping distances to child nodes
+    """
     label: str
     children: dict[int, "BKTreeNode"]
 
 
 class BKTree:
-    """A BK-tree for efficiently finding close matches to strings."""
+    """
+    A Burkhard-Keller tree for efficiently finding close matches to strings.
+
+    The BK-tree is a specialized data structure that enables fast approximate
+    string matching by organizing strings according to their edit distance.
+    This structure is particularly useful for:
+
+    1. Finding all strings within a specific edit distance of a query string
+    2. Detecting typosquatted domains in phishing detection
+    3. Implementing fuzzy search functionality
+
+    The tree's structure allows for efficient searching by pruning entire
+    subtrees that cannot contain matches, significantly reducing the search space.
+    """
 
     def __init__(
         self,
@@ -25,6 +66,15 @@ class BKTree:
         Space complexity: `O(n)`
 
         Where `n = len(items)`.
+
+        Example:
+            >>> def simple_distance(a, b):
+            ...     return abs(len(a) - len(b))
+            >>> tree = BKTree(simple_distance, ["cat", "dog", "mouse"])
+            >>> print(len(tree.items))
+            3
+            >>> print("cat" in tree.items)
+            True
         """
         self.root: BKTreeNode | None = None
         self.items: set[str] = set()
@@ -72,6 +122,15 @@ class BKTree:
         Space complexity: `O(log(n))` on average, `O(n)` in the worst case.
 
         Where `n` is the number of items in the tree and `T_d` is the time complexity of `distance_fn`.
+
+        Example:
+            >>> def simple_distance(a, b):
+            ...     return abs(len(a) - len(b))
+            >>> tree = BKTree(simple_distance, ["cat", "doggy", "mouse"])
+            >>> tree.contains_max_distance("fish", 1)  # Only "cat" is within distance 1
+            True
+            >>> tree.contains_max_distance("a", 1)  # No strings of length 1 or 2
+            False
         """
         assert max_distance >= 0
         if self.root is None:
@@ -106,6 +165,14 @@ def levenshtein_distance(s1: str, s2: str) -> int:
 
     Time complexity: `O(len(s1) * len(s2))`
     Space complexity: `O(min(len(s1), len(s2)))`
+
+    Example:
+        >>> levenshtein_distance("cat", "bat")
+        1
+        >>> levenshtein_distance("kitten", "sitting")
+        3
+        >>> levenshtein_distance("", "abc")
+        3
     """
     # Make s2 the shorter string to use less memory
     if len(s1) < len(s2):

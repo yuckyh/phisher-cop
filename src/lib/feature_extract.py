@@ -1,3 +1,10 @@
+"""
+Feature extraction module for phishing detection.
+
+Libraries used:
+- typing_extensions: Enhanced type annotations for better code readability
+"""
+
 import re
 from functools import lru_cache
 from ipaddress import ip_address
@@ -20,10 +27,31 @@ def count_whitelisted_addresses(
     safe_domains: set[str],
 ) -> int:
     """
-    Count how many email addresses are from a whitelisted domain.
+    Count how many email addresses come from known safe/trusted domains.
 
-    Time complexity: `O(n)` where `n` is the number of email addresses.
-    Space complexity: `O(1)`.
+    This is an important feature for phishing detection because legitimate
+    emails typically come from well-known domains, while phishing attempts
+    often use unusual or deceptive domains.
+
+    Args:
+        emails: Collection of email addresses to check
+        safe_domains: Set of domain names considered safe/trusted
+
+    Returns:
+        int: Count of email addresses from safe domains
+
+    Time complexity: O(n) where n is the number of email addresses
+    Space complexity: O(1)
+
+    Example:
+        >>> from .email_address import parse_email_address
+        >>> emails = [
+        ...     parse_email_address("user@google.com"),
+        ...     parse_email_address("contact@phishing-site.com")
+        ... ]
+        >>> safe_domains = {"google.com", "microsoft.com", "apple.com"}
+        >>> count_whitelisted_addresses(emails, safe_domains)
+        1
     """
     return sum(1 for email in emails if email.domain.host in safe_domains)
 
@@ -47,9 +75,27 @@ def find_suspicious_words(
 
 
 def suspicious_word_kernel(x: float) -> float:  # pragma: no cover
-    """
-    A kernel function that gives higher weight to words appearing earlier in the text.
-    `x` is a normalized position in the text in the range [0, 1].
+    """A kernel function that weights suspicious words based on their position.
+
+    This function gives higher weight to suspicious words that appear earlier
+    in the text, as phishing emails often front-load their suspicious content.
+
+    Args:
+        x: Normalized position in the text (0 = start, 1 = end)
+
+    Returns:
+        float: Weight for a word at this position (2.0 at start, 1.0 at end)
+
+    Raises:
+        AssertionError: If x is outside the range [0, 1]
+
+    Example:
+        >>> suspicious_word_kernel(0.0)  # Word at the beginning
+        2.0
+        >>> suspicious_word_kernel(0.5)  # Word in the middle
+        1.5
+        >>> suspicious_word_kernel(1.0)  # Word at the end
+        1.0
     """
     # This kernel linearly interpolates between 2 at x=0 and 1 at x=1.
     assert 0 <= x <= 1
@@ -61,10 +107,24 @@ def score_suspicious_words(
     suspicious_words: set[str],
     kernel: Callable[[float], float] = suspicious_word_kernel,
 ) -> float:
-    """
-    Score the suspicious words in the given list of words.
-    Higher scores are given to suspicious words that appear earlier in the list.
-    This score is normalized so that the length of the list does not affect it.
+    """Calculate a score for suspicious words found in the email.
+
+    This function:
+    1. Finds all suspicious words in the email
+    2. Weights them based on their position using the kernel function
+    3. Normalizes the score by the total number of words
+
+    Words appearing earlier in the text get higher weights, as phishing
+    emails often front-load their suspicious content.
+
+    Args:
+        words: List of words from the email
+        suspicious_words: Set of known suspicious words (must be lowercase)
+        kernel: Function that weights words by position (default: suspicious_word_kernel)
+
+    Returns:
+        float: A normalized suspiciousness score between 0.0 and 2.0
+               (0.0 = no suspicious words, higher = more suspicious)
     """
     end = max(1, len(words) - 1)
     score = 0.0
@@ -87,7 +147,31 @@ def is_typosquatted_domain(
     safe_domain_tree: BKTree,
     edit_threshold: int,
 ) -> bool:
-    """Check if the domain is a likely typosquatted version of a safe domain."""
+    """
+    Check if a domain is a likely typosquatted version of a safe domain.
+
+    Typosquatting is a technique used by phishers where they register domains
+    that are very similar to legitimate domains but with small typos, like
+    'goggle.com' instead of 'google.com'.
+
+    This function uses Levenshtein distance to detect domains that are
+    similar to safe domains but not identical.
+
+    Example:
+        >>> tree = BKTree(levenshtein_distance, ["google.com", "microsoft.com"])
+        >>> is_typosquatted_domain("goggle.com", tree, 2)
+        True
+        >>> is_typosquatted_domain("completelydifferent.com", tree, 2)
+        False
+
+    Args:
+        domain_host: The domain host name to check
+        safe_domain_tree: BK-tree of safe domain names for efficient similarity search
+        edit_threshold: Maximum edit distance to consider a match (typically 1-2)
+
+    Returns:
+        bool: True if the domain appears to be a typosquatted version of a safe domain
+    """
     return (
         domain_host not in safe_domain_tree.items
         and safe_domain_tree.contains_max_distance(domain_host, edit_threshold)
@@ -99,7 +183,20 @@ def count_typosquatted_domains(
     safe_domain_tree: BKTree,
     edit_threshold: int,
 ) -> int:
-    """Count the number of domains that are likely typosquatted versions of popular domains."""
+    """
+    Count the number of likely typosquatted domains in an email.
+
+    This is an important phishing detection feature as phishers often use
+    domains that are visually similar to legitimate domains to trick users.
+
+    Args:
+        domains: Collection of domains to check
+        safe_domain_tree: BK-tree of safe domain names for efficient similarity search
+        edit_threshold: Maximum edit distance to consider a match (typically 1)
+
+    Returns:
+        int: Count of domains that appear to be typosquatted
+    """
     return sum(
         1
         for domain in domains
@@ -143,7 +240,18 @@ def email_domain_matches_url(
 
 
 def capital_words_ratio(words: list[str]) -> float:
-    """Returns the ratio of words in all caps to those that are not."""
+    """
+    Calculate the ratio of all-uppercase words in the email.
+
+    Phishing emails often use excessive capitalization to create urgency
+    or draw attention to specific parts of the message.
+
+    Args:
+        words: List of words from the email
+
+    Returns:
+        float: Ratio of all-uppercase words to total words (0.0 to 1.0)
+    """
     return sum(
         1  # This comment is to force the formatter to keep this on multiple lines
         for word in words
@@ -156,7 +264,18 @@ MONEY_PATTERN = re.compile(r"[$€£]\d+")
 
 
 def money_tokens_ratio(tokens: list[str]) -> float:
-    """Returns the ratio of tokens that represent money amounts to those that do not."""
+    """
+    Calculate the ratio of tokens that represent monetary amounts.
+
+    Phishing emails often mention money to entice victims (e.g., prizes,
+    refunds, or payments that need attention).
+
+    Args:
+        tokens: List of tokens from the email
+
+    Returns:
+        float: Ratio of money-related tokens to total tokens (0.0 to 1.0)
+    """
     return sum(
         1  # This comment is to force the formatter to keep this on multiple lines
         for token in tokens

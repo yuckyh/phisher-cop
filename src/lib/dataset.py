@@ -1,3 +1,21 @@
+"""
+Module for loading, validating, and managing email datasets for training and testing.
+
+This module provides utilities for:
+1. Loading and preparing the SpamAssassin email dataset
+2. Validating dataset integrity using cryptographic hashing
+3. Splitting data into training and testing sets
+4. Converting raw emails into structured data for machine learning
+
+The dataset functions handle downloading, extracting, and organizing the
+email corpus in a reproducible way, ensuring consistent train/test splits
+across different runs and environments through the use of fixed random seeds.
+
+Libraries used:
+- numpy: For numerical operations and array handling
+- typing_extensions: Enhanced type annotations
+"""
+
 import hashlib
 import os
 import random
@@ -28,26 +46,89 @@ DataSplit: TypeAlias = tuple[list[Email], NDArray[np.uint8]]
 
 
 class Label(Enum):
+    """
+    Enumeration of email classification labels.
+
+    This enum defines the two possible classifications for emails in the dataset:
+    - HAM (0): Legitimate emails
+    - SPAM (1): Phishing or spam emails
+
+    These values correspond to the binary classification targets used in the
+    machine learning models, where 0 represents legitimate emails and 1 represents
+    phishing/spam emails.
+    """
     HAM = 0
     SPAM = 1
 
 
 def update_hash(hash_func, file_path: str):
-    """Update the given hash function with the contents of a file."""
+    """
+    Update the given hash function with the contents of a file.
+
+    This is a helper function for calculating file hashes in chunks
+    to avoid loading large files entirely into memory.
+
+    Args:
+        hash_func: A hashlib hash function object (e.g., hashlib.sha256())
+        file_path: Path to the file to hash
+
+    Returns:
+        None: The hash_func is updated in-place
+
+    Example:
+        >>> import hashlib
+        >>> hash_obj = hashlib.sha256()
+        >>> update_hash(hash_obj, "some_file.txt")
+        >>> hash_obj.hexdigest()[:10]  # First 10 chars of the hash
+        '8f434346dc'
+    """
     with open(file_path, "rb") as f:
         while chunk := f.read(64 * 1024):
             hash_func.update(chunk)
 
 
 def hash_file(file_path: str) -> str:
-    """Compute the SHA-256 hash of a file."""
+    """
+    Compute the SHA-256 hash of a file.
+
+    This function calculates the cryptographic hash of a file's contents,
+    which is used for dataset integrity verification.
+
+    Args:
+        file_path: Path to the file to hash
+
+    Returns:
+        str: Hexadecimal representation of the SHA-256 hash
+
+    Example:
+        >>> hash_file("requirements.txt")  # Result will depend on actual file content
+        'a1b2c3d4e5f6...'
+    """
     hash_func = hashlib.sha256()
     update_hash(hash_func, file_path)
     return hash_func.hexdigest()
 
 
 def hash_dir(dir_path: str) -> str:
-    """Compute the SHA-256 hash of a directory by hashing all its files and file paths."""
+    """
+    Compute the SHA-256 hash of a directory by hashing all its files and file paths.
+
+    This function creates a deterministic hash of an entire directory structure,
+    including both file contents and relative paths. It's used to verify that
+    the dataset has been correctly prepared with the expected structure.
+
+    Args:
+        dir_path: Path to the directory to hash
+
+    Returns:
+        str: Hexadecimal representation of the SHA-256 hash
+
+    Note:
+        The hash is computed in a way that is:
+        - Deterministic (same directory always produces the same hash)
+        - Sensitive to file contents, names, and directory structure
+        - Independent of file system metadata (timestamps, permissions)
+    """
     hash_func = hashlib.sha256()
     for root, _, files in sorted(os.walk(dir_path)):
         for file in sorted(files):
@@ -64,7 +145,30 @@ def hash_dir(dir_path: str) -> str:
 
 
 def split_dir(dir_path: str, splits: list[float]) -> list[list[str]]:
-    """Split the files in a directory into multiple parts according to the given ratios."""
+    """
+    Split the files in a directory into multiple parts according to the given ratios.
+
+    This function divides the files in a directory into multiple groups based on
+    the provided split ratios. It uses random shuffling with a fixed seed to ensure
+    reproducible splits across different runs.
+
+    Args:
+        dir_path: Path to the directory containing files to split
+        splits: List of ratios for each split (e.g., [0.8, 0.2] for 80% train, 20% test)
+
+    Returns:
+        list[list[str]]: List of lists, where each inner list contains file paths for that split
+
+    Example:
+        >>> # For a directory with files a.txt, b.txt, c.txt, d.txt, e.txt
+        >>> parts = split_dir("/path/to/dir", [0.6, 0.4])
+        >>> len(parts)
+        2
+        >>> len(parts[0])  # First split (60% of files)
+        3
+        >>> len(parts[1])  # Second split (40% of files)
+        2
+    """
     file_paths = sorted(
         os.path.join(dir_path, filename) for filename in os.listdir(dir_path)
     )
@@ -90,7 +194,25 @@ def split_dir(dir_path: str, splits: list[float]) -> list[list[str]]:
 
 
 def unzip(zip_path: str, zip_hash_expected: str, out_dir: str):
-    """Unzip the dataset to `out_dir`."""
+    """
+    Unzip the dataset archive to the specified output directory.
+
+    This function verifies the integrity of the archive file through its SHA-256
+    hash before extraction, and clears any existing data in the output directory
+    to ensure a clean extraction.
+
+    Args:
+        zip_path: Path to the zip archive
+        zip_hash_expected: Expected SHA-256 hash of the archive
+        out_dir: Directory where the archive will be extracted
+
+    Raises:
+        Exception: If the archive's hash doesn't match the expected value
+
+    Note:
+        This function is designed to work with the specific SpamAssassin dataset
+        used for this project.
+    """
     if hash_file(zip_path) != zip_hash_expected:
         raise Exception(f"Corrupted {zip_path}, please re-download it")
 
@@ -103,7 +225,22 @@ def unzip(zip_path: str, zip_hash_expected: str, out_dir: str):
 # There are no unit tests for this function as it is specific to our exact dataset,
 # so the only sensible test is to check the final hash of the data directory.
 def restructure_splits(out_dir: str, splits: list[float]):  # pragma: no cover
-    """Restructure the unzipped data into train/test splits."""
+    """
+    Restructure the unzipped data into train/test splits.
+
+    This function takes the raw SpamAssassin corpus directory structure and
+    reorganizes it into standardized train/test splits with consistent file naming.
+    It handles the specific structure of the SpamAssassin corpus, including
+    the easy_ham, hard_ham, and spam_2 directories.
+
+    Args:
+        out_dir: Directory containing the unzipped data
+        splits: List of split ratios (e.g., [0.8, 0.2] for 80% train, 20% test)
+
+    Note:
+        This function is specific to the SpamAssassin corpus structure and
+        includes hardcoded paths and special case handling for that dataset.
+    """
     assert len(splits) == 2
 
     # This file is not an email
@@ -133,7 +270,28 @@ def restructure_splits(out_dir: str, splits: list[float]):  # pragma: no cover
 
 
 def load_split(split_dir: str) -> DataSplit:
-    """Load a dataset split from disk."""
+    """
+    Load a dataset split from disk.
+
+    This function reads all email files from the ham and spam subdirectories
+    within the specified split directory, parses them into Email objects,
+    and creates corresponding numeric labels for machine learning.
+
+    Args:
+        split_dir: Path to the directory containing ham and spam subdirectories
+
+    Returns:
+        DataSplit: A tuple containing:
+            - list[Email]: List of parsed email objects
+            - NDArray[np.uint8]: Numpy array of labels (0 for ham, 1 for spam)
+
+    Example:
+        >>> emails, labels = load_split("data/train")
+        >>> print(f"Loaded {len(emails)} emails")
+        Loaded 500 emails
+        >>> print(f"Ham ratio: {1.0 - labels.mean():.2f}")
+        Ham ratio: 0.60
+    """
     emails: list[Email] = []
     labels: list[int] = []
     dir_labels = (("ham", Label.HAM), ("spam", Label.SPAM))
@@ -151,8 +309,36 @@ def load_split(split_dir: str) -> DataSplit:
 def load_data() -> tuple[DataSplit, DataSplit]:  # pragma: no cover
     """
     Load the dataset from the disk, unzipping and preparing it if necessary.
-    Before running, download the dataset and place it in this project's root directory as `archive.zip`:
-    https://www.kaggle.com/datasets/beatoa/spamassassin-public-corpus
+
+    This function handles the end-to-end process of:
+    1. Checking if the dataset exists and has the correct structure
+    2. Unzipping and preprocessing the data if needed
+    3. Validating data integrity through cryptographic hashes
+    4. Loading the train and test splits into memory
+
+    The function expects the SpamAssassin corpus, either already prepared
+    in the data directory, or available as an archive.zip file in the project root.
+
+    Returns:
+        tuple[DataSplit, DataSplit]: A tuple containing:
+            - Training data split (emails and labels)
+            - Testing data split (emails and labels)
+
+    Raises:
+        Exception: If the archive.zip file is missing or corrupt
+
+    Note:
+        Before running, download the dataset and place it in this project's root directory as `archive.zip`:
+        https://www.kaggle.com/datasets/beatoa/spamassassin-public-corpus
+
+    Example:
+        >>> train_data, test_data = load_data()
+        >>> train_emails, train_labels = train_data
+        >>> test_emails, test_labels = test_data
+        >>> print(f"Training set: {len(train_emails)} emails")
+        Training set: 3000 emails
+        >>> print(f"Testing set: {len(test_emails)} emails")
+        Testing set: 1000 emails
     """
 
     # Data is missing or corrupted, we need to unzip and prepare it first

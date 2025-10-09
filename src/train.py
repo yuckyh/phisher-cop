@@ -1,4 +1,19 @@
-"""Entry point for the model training script."""
+"""Entry point for the model training script.
+
+This module handles the end-to-end process of training a phishing detection model:
+1. Loading and preprocessing email data
+2. Generating suspicious word features when needed
+3. Extracting features from preprocessed emails
+4. Training the classifier model (SVM or Random Forest)
+5. Evaluating model performance
+6. Saving the trained model to disk
+
+Libraries used:
+- numpy: For numerical operations and array handling
+- scikit-learn: For machine learning metrics and evaluation
+  - confusion_matrix: For evaluating classification performance
+  - f1_score: For model performance measurement
+"""
 
 import os
 from functools import partial
@@ -19,12 +34,28 @@ from lib.model import (
     extract_features,
 )
 
-FORCE_GENERATE_SUS_WORDS = False
-MODEL_TYPE = ModelType.SVM
-MODEL_SEED = 69420
+# Configuration constants
+FORCE_GENERATE_SUS_WORDS = False  # When True, always regenerate the suspicious words list
+MODEL_TYPE = ModelType.SVM  # The type of model to train (SVM or RANDOM_FOREST)
+MODEL_SEED = 69420  # Random seed for reproducible results
 
 
 def top_n(word_counts: dict[str, int], n: int) -> dict[str, int]:
+    """Return the top N words by frequency count from a word count dictionary.
+
+    Args:
+        word_counts: Dictionary mapping words to their frequency counts
+        n: Number of top words to return
+
+    Returns:
+        Dictionary containing the n most frequent words with their counts
+
+    Example:
+        >>> counts = {"apple": 10, "banana": 5, "cherry": 15, "date": 2}
+        >>> result = top_n(counts, 2)
+        >>> sorted(result.items())
+        [('cherry', 15), ('apple', 10)]
+    """
     descending = sorted(
         word_counts.items(),
         key=lambda kv: kv[1],
@@ -36,6 +67,22 @@ def top_n(word_counts: dict[str, int], n: int) -> dict[str, int]:
 def generate_suspicious_words(
     email_words: list[list[str]], labels: NDArray[np.uint8]
 ) -> None:
+    """Generate a list of suspicious words that are commonly found in phishing emails
+    but rarely in legitimate emails.
+
+    This function:
+    1. Counts word frequencies in both ham and spam emails
+    2. Identifies the top words unique to spam emails
+    3. Filters out short words (less than 4 characters)
+    4. Saves the suspicious words to a text file
+
+    Args:
+        email_words: List of word lists for each email
+        labels: Array of labels indicating whether each email is ham (0) or spam (1)
+
+    Returns:
+        None (writes output to SUSPICIOUS_WORDS file)
+    """
     print("Generating suspicious keyword list...")
 
     ham_word_counts = {}
@@ -63,28 +110,39 @@ def generate_suspicious_words(
 
 
 if __name__ == "__main__":
+    # Main execution flow for training the phishing detection model
+
+    # Step 1: Load the training and test data
     (train_X, train_y), (test_X, test_y) = load_data()
     for X, name in zip((train_X, test_X), ("Train", "Test")):
         print(f"{name} set: {len(X)} samples")
 
+    # Step 2: Preprocess the emails in parallel for better performance
     train_X, test_X = (parallelize(preprocess_email, X) for X in (train_X, test_X))
 
+    # Step 3: Generate suspicious words list if needed
     if FORCE_GENERATE_SUS_WORDS or not os.path.exists(SUSPICIOUS_WORDS):
         generate_suspicious_words([email.words for email in train_X], train_y)
 
+    # Step 4: Extract features from preprocessed emails
     train_X, test_X = (
         parallelize(partial(extract_features, MODEL_TYPE), X) for X in (train_X, test_X)
     )
 
+    # Step 5: Create and fit the preprocessor pipeline
     preprocessor = create_preprocessor(MODEL_TYPE)
     train_X = preprocessor.fit_transform(train_X)
     test_X = preprocessor.transform(test_X)
 
+    # Step 6: Create and train the model
     model = create_model(MODEL_TYPE, MODEL_SEED)
     model.fit(train_X, train_y)
+
+    # Step 7: Save the trained model
     PhisherCop(preprocessor, model).save(MODEL_TYPE.default_path)
     print(f"Saved trained model to {MODEL_TYPE.default_path}")
 
+    # Step 8: Evaluate model performance
     y_pred = model.predict(test_X)
     print(f"Train accuracy: {model.score(train_X, train_y):.3f}")
     print(f"Test accuracy: {model.score(test_X, test_y):.3f}")
