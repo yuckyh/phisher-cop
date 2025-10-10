@@ -49,7 +49,7 @@ from lib.model import (
 FORCE_REGENERATE_SUSPICIOUS_WORDS = (
     False  # When True, always regenerate the suspicious words list
 )
-MODEL_TYPE = ModelType.SVM  # The type of model to train (SVM or RANDOM_FOREST)
+MODEL_TYPE = ModelType.RANDOM_FOREST  # The type of model to train
 MODEL_SEED = 69420  # Random seed for reproducible results
 
 
