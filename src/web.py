@@ -46,7 +46,7 @@ def index():
     match request.method:
         case "GET":
             # Simply render the form
-            return render_template("index.html", model_types=all_model_types)
+            return render_template("index.html.j2", model_types=all_model_types)
         case "POST":
             # Extract form data
             sender = request.form.get("sender", "")
