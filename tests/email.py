@@ -206,10 +206,20 @@ class TestEmail(unittest.TestCase):
         )
         expected = [
             parse_email_address("postmaster@example.com"),
-            # 'To' addresses are not included
-            # parse_email_address("recipient@example.com"),
             parse_email_address("someone@gov.com"),
             parse_email_address("not-scammer@.phishi.ng"),
+        ]
+        actual = get_email_addresses(email, False)
+        self.assertListEqual(actual, expected)
+
+        email = email_from_input(
+            sender="Mail Delivery Subsystem <postmaster@example.com>",
+            subject="hi",
+            payload="test",
+            cc="",
+        )
+        expected = [
+            parse_email_address("postmaster@example.com"),
         ]
         actual = get_email_addresses(email, False)
         self.assertListEqual(actual, expected)
