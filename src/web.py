@@ -19,6 +19,8 @@ from lib.model import ModelType, PhisherCop
 # Initialize Flask application
 app = Flask(__name__)
 
+
+template = "index.html.j2"
 # Create a list of model types for the dropdown in the web interface
 all_model_types = [
     (model_type.value, model_type.name.replace("_", " ").title())
@@ -46,7 +48,7 @@ def index():
     match request.method:
         case "GET":
             # Simply render the form
-            return render_template("index.html.j2", model_types=all_model_types)
+            return render_template(template, model_types=all_model_types)
         case "POST":
             # Extract form data
             sender = request.form.get("sender", "")
@@ -64,14 +66,14 @@ def index():
             except Exception as e:
                 # Return error message if processing fails
                 return render_template(
-                    "index.html",
+                    template,
                     errors=[f"Error: {e}"],
                     model_types=all_model_types,
                 )
 
             # Return the results
             return render_template(
-                "index.html",
+                template,
                 result=score * 100,
                 model_types=all_model_types,
             )
