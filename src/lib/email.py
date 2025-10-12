@@ -341,7 +341,9 @@ def get_email_addresses(email: Email, ignore_errors: bool) -> list[EmailAddress]
         'example.com'
     """
     addresses = []
-    values = [value for field in ("From", "Cc") for value in email.get_all(field, [])]
+    values = [
+        value for field in ("From", "Cc") for value in email.get_all(field, []) if value
+    ]
     for real_name, addr in getaddresses(values, strict=False):
         try:
             addresses.append(parse_email_address(addr))
